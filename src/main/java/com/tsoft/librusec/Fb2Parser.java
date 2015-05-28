@@ -9,7 +9,7 @@ public class Fb2Parser {
         BookTitle bookTitle = new BookTitle();
         bookTitle.fileName = fileName;
 
-        try (BufferedReader bis = new BufferedReader(new FileReader(fileName))) {
+        try (BufferedReader bis = new BufferedReader(new FileReader(fileName, ""))) {
             String line;
             boolean isTitle = false;
             while ((line = bis.readLine()) != null) {

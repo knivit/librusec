@@ -32,24 +32,28 @@ public class Main {
     }
 
     public void parse(String folder) throws IOException{
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(folder + "/index.csv"))) {
+        System.out.println("Processing directory: " + folder);
+        String outputFileName = folder + "/index.csv";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName))) {
             writer.write(BookTitle.getCsvFields());
             writer.newLine();
 
             BookConsumer bookConsumer = new BookConsumer(writer);
             walk(folder, bookConsumer);
-            System.out.println(bookConsumer.counter+" file(s) processed");
+
+            System.out.println(bookConsumer.counter + " file(s) processed");
+            System.out.println("See results in " + outputFileName);
         }
     }
 
     private static void walk(String path, BookConsumer consumer) throws IOException {
         File root = new File(path);
         File[] list = root.listFiles();
-
         if (list == null) return;
 
         for (File f : list) {
             if (f.isDirectory()) walk(f.getAbsolutePath(), consumer);
+            else if (!f.getAbsolutePath().endsWith(".fb2")) continue;
             else {
                 Fb2Parser parser = new Fb2Parser();
                 BookTitle bookTitle = parser.parse(f.getAbsolutePath());

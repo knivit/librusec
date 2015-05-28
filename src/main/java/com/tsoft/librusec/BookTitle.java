@@ -23,10 +23,12 @@ public class BookTitle {
         writer.write(',');
         writer.write(toCsv(title));
         writer.write(',');
-        writer.write(toCsv(authorFirstName + " " + authorMiddleName + " " + authorLastName));
+        writer.write(toCsv(
+                (authorFirstName == null ? "Uknown" : authorFirstName) +
+                (authorMiddleName == null ? "" : " " + authorMiddleName) +
+                (authorLastName == null ? "" : " " + authorLastName)));
         writer.write(',');
         writer.write(toCsv(fileName));
-        writer.write(',');
         writer.newLine();
 
         writer.flush();

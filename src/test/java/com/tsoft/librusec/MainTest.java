@@ -7,7 +7,7 @@ import java.io.IOException;
 public class MainTest {
     @Test
     public void test() throws IOException {
-        String folder = Main.class.getResource("").getPath();
+        String folder = "D:/cygwin64/home/vitaliy_knyazev/books/librusec";
         Main main = new Main();
         main.parse(folder);
     }

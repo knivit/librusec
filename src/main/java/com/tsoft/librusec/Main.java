@@ -2,8 +2,12 @@ package com.tsoft.librusec;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
     static class BookConsumer {
@@ -34,7 +38,8 @@ public class Main {
     public void parse(String folder) throws IOException{
         System.out.println("Processing directory: " + folder);
         String outputFileName = folder + "/index.csv";
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName))) {
+
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {
             writer.write(BookTitle.getCsvFields());
             writer.newLine();
 
@@ -51,14 +56,22 @@ public class Main {
         File[] list = root.listFiles();
         if (list == null) return;
 
+        int n = 1;
         for (File f : list) {
             if (f.isDirectory()) walk(f.getAbsolutePath(), consumer);
-            else if (!f.getAbsolutePath().endsWith(".fb2")) continue;
-            else {
-                Fb2Parser parser = new Fb2Parser();
-                BookTitle bookTitle = parser.parse(f.getAbsolutePath());
-                consumer.accept(bookTitle);
+            else if (!f.getAbsolutePath().endsWith(".zip")) {
+                System.out.println("Unknown extension, '" + f.getAbsolutePath() + "'");
+                continue;
             }
+            else {
+                System.out.print("File " + n + " of " + list.length + ": " + f.getName() + " ... ");
+                long millis = System.currentTimeMillis();
+                Fb2Parser parser = new Fb2Parser();
+                parser.parse(f.getAbsolutePath(), consumer);
+                System.out.println("done in " + (System.currentTimeMillis() - millis)/1000 + " sec");
+            }
+
+            n ++;
         }
     }
 }

@@ -1,11 +1,6 @@
 package com.tsoft.librusec;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -36,7 +31,7 @@ public class Main {
     }
 
     public void parse(String folder) throws IOException{
-        System.out.println("Processing directory: " + folder);
+        System.out.println("Processing directory " + folder);
         String outputFileName = folder + "/index.csv";
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {
@@ -53,25 +48,15 @@ public class Main {
 
     private static void walk(String path, BookConsumer consumer) throws IOException {
         File root = new File(path);
-        File[] list = root.listFiles();
-        if (list == null) return;
+        File[] files = root.listFiles((dir, name) -> name.endsWith(".zip"));
+        if (files == null) return;
 
-        int n = 1;
-        for (File f : list) {
-            if (f.isDirectory()) walk(f.getAbsolutePath(), consumer);
-            else if (!f.getAbsolutePath().endsWith(".zip")) {
-                System.out.println("Unknown extension, '" + f.getAbsolutePath() + "'");
-                continue;
-            }
-            else {
-                System.out.print("File " + n + " of " + list.length + ": " + f.getName() + " ... ");
-                long millis = System.currentTimeMillis();
-                Fb2Parser parser = new Fb2Parser();
-                parser.parse(f.getAbsolutePath(), consumer);
-                System.out.println("done in " + (System.currentTimeMillis() - millis)/1000 + " sec");
-            }
-
-            n ++;
+        for (int i = 0; i < files.length; i ++) {
+            System.out.print("File " + (i + 1) + " of " + files.length + " " + files[i].getName() + ": ");
+            long millis = System.currentTimeMillis();
+            Fb2Parser parser = new Fb2Parser();
+            parser.parse(files[i].getAbsolutePath(), consumer);
+            System.out.println(" done in " + (System.currentTimeMillis() - millis)/1000 + " sec");
         }
     }
 }

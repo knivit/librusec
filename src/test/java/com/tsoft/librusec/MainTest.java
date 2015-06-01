@@ -5,9 +5,10 @@ import org.junit.Test;
 import java.io.IOException;
 
 public class MainTest {
-    @Test
+    //@Test
     public void test() throws IOException {
-        String folder = "D:/cygwin64/home/vitaliy_knyazev/books/librusec";
+        String folder = "c:/books";
+//        String folder = "D:/cygwin64/home/vitaliy_knyazev/books/librusec";
         Main main = new Main();
         main.parse(folder);
     }

@@ -1,25 +1,15 @@
 package com.tsoft.librusec;
 
+import com.tsoft.librusec.consumer.BatchConsumersManager;
+import com.tsoft.librusec.consumer.Consumer;
+import com.tsoft.librusec.consumer.CsvConsumer;
+import com.tsoft.librusec.consumer.HtmlConsumer;
+
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
 public class Main {
-    static class BookConsumer {
-        public int counter = 0;
-
-        private BufferedWriter writer;
-
-        BookConsumer(BufferedWriter writer) {
-            this.writer = writer;
-        }
-
-        public void accept(BookTitle bookTitle) throws IOException {
-            bookTitle.writeToCsv(writer);
-            counter ++;
-        }
-    }
-
     public static void main(String[] args) throws IOException {
         if (args == null || args.length != 1 || args[0].equalsIgnoreCase("-help")) {
             System.out.println("Usage: java -jar librusec.jar <Path to the library's folder>");
@@ -32,31 +22,37 @@ public class Main {
 
     public void parse(String folder) throws IOException{
         System.out.println("Processing directory " + folder);
-        String outputFileName = folder + "/index.csv";
 
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {
-            writer.write(BookTitle.getCsvFields());
-            writer.newLine();
+        BatchConsumersManager batchConsumersManager = new BatchConsumersManager();
+        batchConsumersManager.registerConsumer(new HtmlConsumer());
+        List<Consumer> consumers = Arrays.asList(new CsvConsumer(), batchConsumersManager);
+        try {
+            for (Consumer consumer : consumers) consumer.open(folder);
 
-            BookConsumer bookConsumer = new BookConsumer(writer);
-            walk(folder, bookConsumer);
+            int count = walk(folder, consumers);
 
-            System.out.println(bookConsumer.counter + " file(s) processed");
-            System.out.println("See results in " + outputFileName);
+            System.out.println(count + " file(s) processed");
+            System.out.println("See results in " + folder);
+        } finally {
+            for (Consumer consumer : consumers) consumer.close();
         }
     }
 
-    private static void walk(String path, BookConsumer consumer) throws IOException {
+    private static int walk(String path, List<Consumer> consumers) throws IOException {
         File root = new File(path);
         File[] files = root.listFiles((dir, name) -> name.endsWith(".zip"));
-        if (files == null) return;
+        if (files == null) return 0;
 
+        int totalCount = 0;
         for (int i = 0; i < files.length; i ++) {
             System.out.print("File " + (i + 1) + " of " + files.length + " " + files[i].getName() + ": ");
             long millis = System.currentTimeMillis();
             Fb2Parser parser = new Fb2Parser();
-            parser.parse(files[i].getAbsolutePath(), consumer);
-            System.out.println(" done in " + (System.currentTimeMillis() - millis)/1000 + " sec");
+            int count = parser.parse(files[i].getAbsolutePath(), consumers);
+            System.out.println(" done in " + (System.currentTimeMillis() - millis)/1000 + " sec, " + count + " book(s) found");
+
+            totalCount += count;
         }
+        return totalCount;
     }
 }

@@ -1,18 +1,23 @@
 package com.tsoft.librusec;
 
+import com.tsoft.librusec.consumer.Consumer;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Fb2Parser {
     public Fb2Parser() { }
 
-    public void parse(String fileName, Main.BookConsumer consumer) throws IOException {
+    public int parse(String fileName, List<Consumer> consumers) throws IOException {
+        int fc = 0;
+
         // file names in the zip are UTF-8
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(fileName), StandardCharsets.UTF_8)) {
-            int fc = 0;
             ZipEntry entry;
             while((entry = zis.getNextEntry()) != null) {
                 if (!entry.getName().endsWith(".fb2")) {
@@ -59,25 +64,64 @@ public class Fb2Parser {
                 bookTitle.genre = getValue(title, "<genre>", "</genre>");
                 bookTitle.title = getValue(title, "<book-title>", "</book-title>");
                 bookTitle.lang = getValue(title, "<lang>", "</lang>");
-                bookTitle.authorFirstName = getValue(title, "<first-name>", "</first-name>");
-                bookTitle.authorLastName = getValue(title, "<last-name>", "</last-name>");
-                bookTitle.authorMiddleName = getValue(title, "<middle-name>", "</middle-name>");
+                bookTitle.authors = getAuthors(title);
+                bookTitle.annotation = getValue(title, "<annotation>", "</annotation");
+                bookTitle.date = getValue(title, "<date>", "</date>");
 
-                consumer.accept(bookTitle);
+                for (Consumer consumer : consumers) consumer.accept(bookTitle);
 
                 fc ++;
                 if ((fc % 1000) == 0) System.out.print('.');
             }
         }
+        return fc;
     }
 
-    private String getValue(String text, String begin, String end) {
-        int from = text.indexOf(begin);
-        if (from == -1) return null;
+    private String getAuthors(String title) {
+        ArrayList<String> authors = getValueList(title, "<author>", "</author>");
+        StringBuilder buf = new StringBuilder();
+        for (String author : authors) {
+            String firstName = getValue(author, "<first-name>", "</first-name>");
+            String middleName = getValue(author, "<middle-name>", "</middle-name>");
+            String lastName = getValue(author, "<last-name>", "</last-name>");
 
-        int to = text.indexOf(end, from + begin.length());
-        if (to == -1) return null;
+            if (buf.length() > 0) buf.append(',');
+            if (lastName != null && !lastName.isEmpty()) buf.append(lastName);
+            if (middleName != null && !middleName.isEmpty()) buf.append(' ').append(middleName);
+            if (firstName != null && !firstName.isEmpty()) buf.append(' ').append(firstName);
+        }
+        return buf.length() == 0 ? "?" : buf.toString();
+    }
 
-        return text.substring(from + begin.length(), to);
+    private String getValue(String text, String startTag, String endTag) {
+        ArrayList<String> values = getValueList(text, startTag, endTag);
+        if (values == null || values.isEmpty()) return null;
+
+        String val = values.get(0);
+        if (values.size() > 1) {
+            StringBuilder buf = new StringBuilder();
+            for (String str : values) {
+                if (buf.length() > 0) buf.append(',');
+                buf.append(str);
+            }
+            val = buf.toString();
+        }
+        return val;
+    }
+
+    private ArrayList<String> getValueList(String text, String startTag, String endTag) {
+        int off = 0;
+        ArrayList<String> result = new ArrayList<>();
+        while (true) {
+            int from = text.indexOf(startTag, off);
+            if (from == -1) break;
+
+            int to = text.indexOf(endTag, from + startTag.length());
+            if (to == -1) break;
+
+            result.add(text.substring(from + startTag.length(), to));
+            off = to;
+        }
+        return result;
     }
 }

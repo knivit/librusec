@@ -28,31 +28,35 @@ public class Main {
         List<Consumer> consumers = Arrays.asList(new CsvConsumer(), batchConsumersManager);
         try {
             for (Consumer consumer : consumers) consumer.open(folder);
-
-            int count = walk(folder, consumers);
-
-            System.out.println(count + " file(s) processed");
-            System.out.println("See results in " + folder);
+            process(folder, consumers);
         } finally {
             for (Consumer consumer : consumers) consumer.close();
         }
     }
 
-    private static int walk(String path, List<Consumer> consumers) throws IOException {
+    private void process(String path, List<Consumer> consumers) throws IOException {
         File root = new File(path);
         File[] files = root.listFiles((dir, name) -> name.endsWith(".zip"));
-        if (files == null) return 0;
+        if (files == null) {
+            System.out.println("Zip files in " + path + " not found");
+            return;
+        }
 
         int totalCount = 0;
+        long totalTime = 0;
         for (int i = 0; i < files.length; i ++) {
             System.out.print("File " + (i + 1) + " of " + files.length + " " + files[i].getName() + ": ");
             long millis = System.currentTimeMillis();
             Fb2Parser parser = new Fb2Parser();
             int count = parser.parse(files[i].getAbsolutePath(), consumers);
-            System.out.println(" done in " + (System.currentTimeMillis() - millis)/1000 + " sec, " + count + " book(s) found");
+            long time = (System.currentTimeMillis() - millis)/1000;
+            System.out.println(" done in " + time + " sec, " + count + " book(s) found");
 
             totalCount += count;
+            totalTime += time;
         }
-        return totalCount;
+
+        System.out.println(totalCount + " file(s) processed in " + totalTime + " sec");
+        System.out.println("See results in " + path);
     }
 }

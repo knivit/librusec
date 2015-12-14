@@ -1,6 +1,6 @@
 package com.tsoft.librusec.consumer;
 
-import com.tsoft.librusec.BookTitle;
+import com.tsoft.librusec.Book;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -21,20 +21,20 @@ public class CsvConsumer implements Consumer {
     }
 
     @Override
-    public void accept(BookTitle bookTitle) throws IOException {
-        writer.write(toCsv(bookTitle.lang));
+    public void accept(Book book) throws IOException {
+        writer.write(toCsv(book.lang));
         writer.write(',');
-        writer.write(toCsv(bookTitle.genre));
+        writer.write(toCsv(book.genre));
         writer.write(',');
-        writer.write(toCsv(bookTitle.date));
+        writer.write(toCsv(book.date));
         writer.write(',');
-        writer.write(toCsv(bookTitle.title));
+        writer.write(toCsv(book.title));
         writer.write(',');
-        writer.write(toCsv(bookTitle.authors));
+        writer.write(toCsv(book.authors));
         writer.write(',');
-        writer.write(toCsv(bookTitle.zipFileName));
+        writer.write(toCsv(book.zipFileName));
         writer.write(',');
-        writer.write(toCsv(bookTitle.fileName));
+        writer.write(toCsv(book.fileName));
         writer.newLine();
 
         writer.flush();

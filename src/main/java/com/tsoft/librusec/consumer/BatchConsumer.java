@@ -1,6 +1,6 @@
 package com.tsoft.librusec.consumer;
 
-import com.tsoft.librusec.BookTitle;
+import com.tsoft.librusec.Book;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ public abstract class BatchConsumer {
 
     protected abstract void open(String outputFolder) throws IOException;
 
-    protected abstract void acceptBatch(ArrayList<BookTitle> list) throws IOException;
+    protected abstract void acceptBatch(ArrayList<Book> list) throws IOException;
 
     protected abstract void close() throws IOException;
 

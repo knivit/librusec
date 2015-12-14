@@ -1,6 +1,6 @@
 package com.tsoft.librusec;
 
-public class BookTitle {
+public class Book {
     public String zipFileName;
     public String fileName;
     public String authors;

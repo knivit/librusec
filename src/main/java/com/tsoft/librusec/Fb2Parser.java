@@ -25,9 +25,9 @@ public class Fb2Parser {
                     continue;
                 }
 
-                BookTitle bookTitle = new BookTitle();
-                bookTitle.zipFileName = new File(fileName).getName();
-                bookTitle.fileName = entry.getName();
+                Book book = new Book();
+                book.zipFileName = new File(fileName).getName();
+                book.fileName = entry.getName();
 
                 byte[] buf = new byte[2048];
                 int bufSize = zis.read(buf);
@@ -61,14 +61,14 @@ public class Fb2Parser {
                     continue;
                 }
 
-                bookTitle.genre = getValue(title, "<genre>", "</genre>");
-                bookTitle.title = getValue(title, "<book-title>", "</book-title>");
-                bookTitle.lang = getValue(title, "<lang>", "</lang>");
-                bookTitle.authors = getAuthors(title);
-                bookTitle.annotation = getValue(title, "<annotation>", "</annotation");
-                bookTitle.date = getValue(title, "<date>", "</date>");
+                book.genre = getValue(title, "<genre>", "</genre>");
+                book.title = getValue(title, "<book-title>", "</book-title>");
+                book.lang = getValue(title, "<lang>", "</lang>");
+                book.authors = getAuthors(title);
+                book.annotation = getValue(title, "<annotation>", "</annotation");
+                book.date = getValue(title, "<date>", "</date>");
 
-                for (Consumer consumer : consumers) consumer.accept(bookTitle);
+                for (Consumer consumer : consumers) consumer.accept(book);
 
                 fc ++;
                 if ((fc % 1000) == 0) System.out.print('.');
@@ -101,7 +101,7 @@ public class Fb2Parser {
         if (values.size() > 1) {
             StringBuilder buf = new StringBuilder();
             for (String str : values) {
-                if (buf.length() > 0) buf.append(',');
+                if (buf.length() > 0) buf.append(", ");
                 buf.append(str);
             }
             val = buf.toString();

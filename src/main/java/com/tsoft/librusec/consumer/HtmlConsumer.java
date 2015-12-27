@@ -76,9 +76,11 @@ public class HtmlConsumer extends BatchConsumer {
         for (Section section : sections) {
             String name = (section.letter == 0 ? "0-9, eng" : String.valueOf(section.letter));
             writer.write("<a href='a_" + Integer.toHexString(section.letter) + "_0.html'>" + name + " (" + section.count + ")</a>");
-            writer.write("<br>");
+            writer.write("<br>\n");
         }
-        writer.write("\n</body>\n</html>\n");
+        writer.write("<script type='text/javascript' src='zip.js'></script>\n");
+        writer.write("<script type='text/javascript' src='code.js'></script>\n");
+        writer.write("</body>\n</html>\n");
         writer.close();
 
         int pageSize = 500;
@@ -122,7 +124,7 @@ public class HtmlConsumer extends BatchConsumer {
                     nextPage = "<a href='a_" + Integer.toHexString(section.letter) + "_" + (page + 1) + ".html'>%s [" + (page + 2) + "]</a>";
                 }
 
-                writer.write("<table style='width:100%'>\n" +
+                writer.write("<table>\n" +
                         "<tr>" +
                         "<td><a href='index.html'>Index</a></td>" +
                         "<td>" + String.format(firstPage, "First") + "</td>" +
@@ -132,9 +134,17 @@ public class HtmlConsumer extends BatchConsumer {
                         "<td>" + String.format(lastPage, "Last") + "</td>" +
                         "</tr>\n" +
                         "</table>\n");
+                writer.write("<br>");
 
                 writer.write("<table style='width:100%'>\n" +
-                        "<tr><th>Lang</th><th>Genre</th><th>Date</th><th>Authors</th><th>Title</th><th>Annotations</th><th>Link</th></tr>\n");
+                        "<tr>" +
+                        "<th>Lang</th>" +
+                        "<th>Genre</th>" +
+                        "<th>Date</th>" +
+                        "<th>Authors</th>" +
+                        "<th>Title</th>" +
+                        "<th>Annotations</th>" +
+                        "</tr>\n");
 
                 String lastAuthor = "";
                 for (int i = page*pageSize; i < Math.min(section.count, (page+1)*pageSize); i++) {
@@ -150,9 +160,8 @@ public class HtmlConsumer extends BatchConsumer {
                                     "<td>" + (book.genre == null ? "" : book.genre) + "</td>" +
                                     "<td>" + (book.date == null ? "" : book.date) + "</td>" +
                                     "<td>" + author + "</td>" +
-                                    "<td>" + (book.title == null ? "" : book.title) + "</td>" +
+                                    "<td><a onclick=\"dwl(this, '" + book.zipFileName + "','" + book.fileName + "')\">" + (book.title == null ? "" : book.title) + "</a></td>" +
                                     "<td>" + (book.annotation == null ? "" : book.annotation) + "</td>" +
-                                    "<td>" + book.zipFileName + "#" + book.fileName + "</td>" +
                                     "</tr>\n");
                 }
                 writer.write("</table>\n");

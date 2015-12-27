@@ -16,7 +16,7 @@ public class BatchConsumersManager implements Consumer {
     }
 
     @Override
-    public void open(String outputFolder) throws IOException {
+    public void open(String outputFolder) throws Exception {
         for (BatchConsumer consumer : registeredConsumers) {
             consumer.open(outputFolder);
             activeConsumers.add(consumer);

@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         if (args == null || args.length != 1 || args[0].equalsIgnoreCase("-help")) {
             System.out.println("Usage: java -jar librusec.jar <Path to the library's folder>");
             System.exit(0);
@@ -20,7 +20,7 @@ public class Main {
         main.parse(args[0]);
     }
 
-    public void parse(String folder) throws IOException{
+    public void parse(String folder) throws Exception{
         System.out.println("Processing directory " + folder);
 
         BatchConsumersManager batchConsumersManager = new BatchConsumersManager();

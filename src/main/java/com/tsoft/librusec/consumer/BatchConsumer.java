@@ -9,7 +9,7 @@ public abstract class BatchConsumer {
     protected String outputFolder;
     private int batchSize;
 
-    protected void open(String outputFolder) throws IOException {
+    protected void open(String outputFolder) throws Exception {
         this.outputFolder = outputFolder;
     }
 

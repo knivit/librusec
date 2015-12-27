@@ -6,13 +6,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public abstract class BatchConsumer {
+    protected String outputFolder;
     private int batchSize;
 
-    protected abstract void open(String outputFolder) throws IOException;
+    protected void open(String outputFolder) throws IOException {
+        this.outputFolder = outputFolder;
+    }
 
     protected abstract void acceptBatch(ArrayList<Book> list) throws IOException;
 
-    protected abstract void close() throws IOException;
+    protected void close() throws IOException { }
 
     BatchConsumer(int batchSize) {
         assert batchSize != 0;

@@ -1,9 +1,9 @@
 package com.tsoft.librusec;
 
-import com.tsoft.librusec.consumer.BatchConsumersManager;
-import com.tsoft.librusec.consumer.Consumer;
-import com.tsoft.librusec.consumer.CsvConsumer;
-import com.tsoft.librusec.consumer.HtmlConsumer;
+import com.tsoft.librusec.service.parser.Fb2Parser;
+import com.tsoft.librusec.service.writer.CsvLibraryWriter;
+import com.tsoft.librusec.service.writer.HtmlLibraryWriter;
+import com.tsoft.librusec.service.writer.LibraryWriter;
 
 import java.io.*;
 import java.util.Arrays;
@@ -23,18 +23,16 @@ public class Main {
     public void parse(String folder) throws Exception{
         System.out.println("Processing directory " + folder);
 
-        BatchConsumersManager batchConsumersManager = new BatchConsumersManager();
-        batchConsumersManager.registerConsumer(new HtmlConsumer());
-        List<Consumer> consumers = Arrays.asList(new CsvConsumer(), batchConsumersManager);
-        try {
-            for (Consumer consumer : consumers) consumer.open(folder);
-            process(folder, consumers);
-        } finally {
-            for (Consumer consumer : consumers) consumer.close();
+        List<LibraryWriter> libraryWriters = Arrays.asList(new CsvLibraryWriter(), new HtmlLibraryWriter());
+
+        for (LibraryWriter libraryWriter : libraryWriters) {
+            libraryWriter.open(folder);
+            process(folder, libraryWriters);
+            libraryWriter.close();
         }
     }
 
-    private void process(String path, List<Consumer> consumers) throws IOException {
+    private void process(String path, List<LibraryWriter> libraryWriters) throws IOException {
         File root = new File(path);
         File[] files = root.listFiles((dir, name) -> name.endsWith(".zip"));
         if (files == null) {
@@ -46,9 +44,10 @@ public class Main {
         long totalTime = 0;
         for (int i = 0; i < files.length; i ++) {
             System.out.print("File " + (i + 1) + " of " + files.length + " " + files[i].getName() + ": ");
+
             long millis = System.currentTimeMillis();
             Fb2Parser parser = new Fb2Parser();
-            int count = parser.parse(files[i].getAbsolutePath(), consumers);
+            int count = parser.parse(files[i].getAbsolutePath(), libraryWriters);
             long time = (System.currentTimeMillis() - millis)/1000;
             System.out.println(" done in " + time + " sec, " + count + " book(s) found");
 

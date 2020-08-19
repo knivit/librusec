@@ -1,6 +1,6 @@
-package com.tsoft.librusec.consumer;
+package com.tsoft.librusec.service.writer;
 
-import com.tsoft.librusec.Book;
+import com.tsoft.librusec.dto.Book;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
-public class CsvConsumer implements Consumer {
+public class CsvLibraryWriter implements LibraryWriter {
     private BufferedWriter writer;
 
     @Override
@@ -18,6 +18,7 @@ public class CsvConsumer implements Consumer {
 
         writer.write("lang,genre,date,title,author,zip,file");
         writer.newLine();
+        writer.flush();
     }
 
     @Override
@@ -36,7 +37,6 @@ public class CsvConsumer implements Consumer {
         writer.write(',');
         writer.write(toCsv(book.fileName));
         writer.newLine();
-
         writer.flush();
     }
 

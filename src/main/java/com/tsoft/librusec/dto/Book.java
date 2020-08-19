@@ -1,4 +1,4 @@
-package com.tsoft.librusec;
+package com.tsoft.librusec.dto;
 
 public class Book {
     public String zipFileName;

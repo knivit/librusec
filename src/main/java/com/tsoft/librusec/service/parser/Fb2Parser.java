@@ -1,6 +1,7 @@
-package com.tsoft.librusec;
+package com.tsoft.librusec.service.parser;
 
-import com.tsoft.librusec.consumer.Consumer;
+import com.tsoft.librusec.service.writer.LibraryWriter;
+import com.tsoft.librusec.dto.Book;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -13,7 +14,7 @@ import java.util.zip.ZipInputStream;
 public class Fb2Parser {
     public Fb2Parser() { }
 
-    public int parse(String fileName, List<Consumer> consumers) throws IOException {
+    public int parse(String fileName, List<LibraryWriter> libraryWriters) throws IOException {
         int fc = 0;
 
         // file names in the zip are UTF-8
@@ -68,7 +69,9 @@ public class Fb2Parser {
                 book.annotation = getValue(title, "<annotation>", "</annotation");
                 book.date = getValue(title, "<date>", "</date>");
 
-                for (Consumer consumer : consumers) consumer.accept(book);
+                for (LibraryWriter libraryWriter : libraryWriters) {
+                    libraryWriter.accept(book);
+                }
 
                 fc ++;
                 if ((fc % 1000) == 0) System.out.print('.');
@@ -106,6 +109,7 @@ public class Fb2Parser {
             }
             val = buf.toString();
         }
+        
         return val;
     }
 
@@ -122,6 +126,7 @@ public class Fb2Parser {
             result.add(text.substring(from + startTag.length(), to));
             off = to;
         }
+
         return result;
     }
 }

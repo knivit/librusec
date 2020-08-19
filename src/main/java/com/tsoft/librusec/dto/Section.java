@@ -1,4 +1,4 @@
-package com.tsoft.librusec.consumer;
+package com.tsoft.librusec.dto;
 
 public class Section {
     public char letter;

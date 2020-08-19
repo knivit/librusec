@@ -1,0 +1,9 @@
+com/tsoft/librusec/consumer/Section.class
+com/tsoft/librusec/consumer/HtmlConsumer.class
+com/tsoft/librusec/Book.class
+com/tsoft/librusec/consumer/BatchConsumer.class
+com/tsoft/librusec/Main.class
+com/tsoft/librusec/Fb2Parser.class
+com/tsoft/librusec/consumer/Consumer.class
+com/tsoft/librusec/consumer/BatchConsumersManager.class
+com/tsoft/librusec/consumer/CsvConsumer.class

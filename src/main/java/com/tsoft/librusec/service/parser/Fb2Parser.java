@@ -1,5 +1,6 @@
 package com.tsoft.librusec.service.parser;
 
+import com.tsoft.librusec.dto.Library;
 import com.tsoft.librusec.service.writer.LibraryWriter;
 import com.tsoft.librusec.dto.Book;
 
@@ -14,15 +15,18 @@ import java.util.zip.ZipInputStream;
 public class Fb2Parser {
     public Fb2Parser() { }
 
-    public int parse(String fileName, List<LibraryWriter> libraryWriters) throws IOException {
-        int fc = 0;
+    public Library parse(String fileName) throws IOException {
+        Library library = new Library();
+        List<String> errors = new ArrayList<>();
 
         // file names in the zip are UTF-8
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(fileName), StandardCharsets.UTF_8)) {
             ZipEntry entry;
-            while((entry = zis.getNextEntry()) != null) {
+
+            int progressBar = 0;
+            while ((entry = zis.getNextEntry()) != null) {
                 if (!entry.getName().endsWith(".fb2")) {
-                    System.out.println("  Unsupported extension of " + entry.getName() + ", skipped");
+                    errors.add("Unsupported extension of " + entry.getName() + ": book skipped");
                     continue;
                 }
 
@@ -40,7 +44,7 @@ public class Fb2Parser {
                 String charsetName = getValue(text, " encoding=\"", "\"");
                 if (charsetName == null) {
                     charsetName = defaultCharsetName;
-                    System.out.println("  Unknown encoding for " + entry.getName() + ", using " + defaultCharsetName);
+                    errors.add("Unknown encoding for " + entry.getName() + ": using " + defaultCharsetName);
                 }
 
                 if (!defaultCharsetName.equalsIgnoreCase(charsetName)) {
@@ -58,7 +62,7 @@ public class Fb2Parser {
                     title = getValue(text, "<title-info>", "</title-info>");
                 }
                 if (title == null) {
-                    System.out.println("  Undefined <title-info> for " + entry.getName() + ", skipped");
+                    errors.add("Undefined <title-info> for " + entry.getName() + ": book skipped");
                     continue;
                 }
 
@@ -68,16 +72,17 @@ public class Fb2Parser {
                 book.authors = getAuthors(title);
                 book.annotation = getValue(title, "<annotation>", "</annotation");
                 book.date = getValue(title, "<date>", "</date>");
+                library.addBook(book);
 
-                for (LibraryWriter libraryWriter : libraryWriters) {
-                    libraryWriter.accept(book);
-                }
-
-                fc ++;
-                if ((fc % 1000) == 0) System.out.print('.');
+                if ((progressBar ++ % 100) == 0) System.out.print('.');
             }
         }
-        return fc;
+
+        if (!errors.isEmpty()) {
+            System.err.println("\n" + String.join("\n", errors));
+        }
+
+        return library;
     }
 
     private String getAuthors(String title) {
@@ -109,7 +114,7 @@ public class Fb2Parser {
             }
             val = buf.toString();
         }
-        
+
         return val;
     }
 

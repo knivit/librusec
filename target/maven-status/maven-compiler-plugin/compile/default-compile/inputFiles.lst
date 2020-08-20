@@ -1,9 +1,8 @@
-/home/egor/git/librusec/src/main/java/com/tsoft/librusec/consumer/CsvConsumer.java
-/home/egor/git/librusec/src/main/java/com/tsoft/librusec/Book.java
-/home/egor/git/librusec/src/main/java/com/tsoft/librusec/Fb2Parser.java
-/home/egor/git/librusec/src/main/java/com/tsoft/librusec/consumer/BatchConsumer.java
-/home/egor/git/librusec/src/main/java/com/tsoft/librusec/consumer/Section.java
-/home/egor/git/librusec/src/main/java/com/tsoft/librusec/consumer/Consumer.java
+/home/egor/git/librusec/src/main/java/com/tsoft/librusec/dto/Library.java
+/home/egor/git/librusec/src/main/java/com/tsoft/librusec/service/writer/HtmlLibraryWriter.java
+/home/egor/git/librusec/src/main/java/com/tsoft/librusec/service/writer/LibraryWriter.java
+/home/egor/git/librusec/src/main/java/com/tsoft/librusec/service/writer/CsvLibraryWriter.java
+/home/egor/git/librusec/src/main/java/com/tsoft/librusec/dto/Section.java
+/home/egor/git/librusec/src/main/java/com/tsoft/librusec/dto/Book.java
 /home/egor/git/librusec/src/main/java/com/tsoft/librusec/Main.java
-/home/egor/git/librusec/src/main/java/com/tsoft/librusec/consumer/HtmlConsumer.java
-/home/egor/git/librusec/src/main/java/com/tsoft/librusec/consumer/BatchConsumersManager.java
+/home/egor/git/librusec/src/main/java/com/tsoft/librusec/service/parser/Fb2Parser.java

@@ -1,51 +1,38 @@
 package com.tsoft.librusec.dto;
 
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class Library {
+public class Library implements Serializable {
+
+    public static final long serialVersionUID = 2L;
 
     private ArrayList<Book> books = new ArrayList<>();
-    private ArrayList<Section> sections = new ArrayList<>();
 
     public void addBook(Book book) {
         books.add(book);
+    }
+
+    public void unionAll(Library library) {
+        books.addAll(library.books);
     }
 
     public Book getBook(int n) {
         return books.get(n);
     }
 
-    private void sortByAuthor() {
-        books.sort((b1, b2) -> b1.authors.compareToIgnoreCase(b2.authors));
+    public List<Book> getBooks() {
+        return Collections.unmodifiableList(books);
     }
 
-    // books must be sorted by authors
-    public ArrayList<Section> getSections() {
-        sortByAuthor();
+    public int getBookCount() {
+        return books.size();
+    }
 
-        Section section = new Section();
-        section.letter = 0; // All chars before Russian 'A'
-        section.firstBookIndex = 0;
-        section.count = 0;
-        sections.add(section);
-
-        int n = 0;
-        for (Book book : books) {
-            char letter = Character.toUpperCase(book.authors.charAt(0));
-
-            if (section.letter != letter) {
-                if (letter >= 0x410) {
-                    section = new Section();
-                    section.letter = letter;
-                    section.firstBookIndex = n;
-                    sections.add(section);
-                }
-            }
-            section.count ++;
-            n ++;
-        }
-
-        return sections;
+    public void sortByAuthor() {
+        books.sort((b1, b2) -> b1.authors.compareToIgnoreCase(b2.authors));
     }
 
 }

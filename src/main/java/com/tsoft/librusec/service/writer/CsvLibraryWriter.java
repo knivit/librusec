@@ -1,6 +1,7 @@
 package com.tsoft.librusec.service.writer;
 
 import com.tsoft.librusec.dto.Book;
+import com.tsoft.librusec.dto.Library;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -22,27 +23,26 @@ public class CsvLibraryWriter implements LibraryWriter {
     }
 
     @Override
-    public void accept(Book book) throws IOException {
-        writer.write(toCsv(book.lang));
-        writer.write(',');
-        writer.write(toCsv(book.genre));
-        writer.write(',');
-        writer.write(toCsv(book.date));
-        writer.write(',');
-        writer.write(toCsv(book.title));
-        writer.write(',');
-        writer.write(toCsv(book.authors));
-        writer.write(',');
-        writer.write(toCsv(book.zipFileName));
-        writer.write(',');
-        writer.write(toCsv(book.fileName));
-        writer.newLine();
-        writer.flush();
-    }
+    public void process(Library library) throws IOException {
+        for (Book book : library.getBooks()) {
+            writer.write(toCsv(book.lang));
+            writer.write(',');
+            writer.write(toCsv(book.genre));
+            writer.write(',');
+            writer.write(toCsv(book.date));
+            writer.write(',');
+            writer.write(toCsv(book.title));
+            writer.write(',');
+            writer.write(toCsv(book.authors));
+            writer.write(',');
+            writer.write(toCsv(book.zipFileName));
+            writer.write(',');
+            writer.write(toCsv(book.fileName));
+            writer.newLine();
+        }
 
-    @Override
-    public void close() throws IOException {
-        if (writer != null) writer.close();
+        writer.flush();
+        writer.close();
     }
 
     private String toCsv(String value) {

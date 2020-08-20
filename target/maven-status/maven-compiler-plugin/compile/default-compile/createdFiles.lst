@@ -1,9 +1,8 @@
-com/tsoft/librusec/consumer/Section.class
-com/tsoft/librusec/consumer/HtmlConsumer.class
-com/tsoft/librusec/Book.class
-com/tsoft/librusec/consumer/BatchConsumer.class
+com/tsoft/librusec/service/writer/HtmlLibraryWriter.class
+com/tsoft/librusec/dto/Section.class
+com/tsoft/librusec/service/writer/CsvLibraryWriter.class
+com/tsoft/librusec/service/parser/Fb2Parser.class
 com/tsoft/librusec/Main.class
-com/tsoft/librusec/Fb2Parser.class
-com/tsoft/librusec/consumer/Consumer.class
-com/tsoft/librusec/consumer/BatchConsumersManager.class
-com/tsoft/librusec/consumer/CsvConsumer.class
+com/tsoft/librusec/service/writer/LibraryWriter.class
+com/tsoft/librusec/dto/Book.class
+com/tsoft/librusec/dto/Library.class

@@ -1,6 +1,11 @@
 package com.tsoft.librusec.dto;
 
-public class Book {
+import java.io.Serializable;
+
+public class Book implements Serializable {
+
+    public static final long serialVersionUID = 1L;
+
     public String zipFileName;
     public String fileName;
     public String authors;

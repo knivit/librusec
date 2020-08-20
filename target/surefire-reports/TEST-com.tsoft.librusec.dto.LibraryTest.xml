@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="1" failures="0" name="com.tsoft.librusec.MainTest" time="0.005" errors="0" skipped="0">
+<testsuite tests="1" failures="0" name="com.tsoft.librusec.dto.LibraryTest" time="0.003" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
     <property name="java.vm.version" value="15+36-1562"/>
@@ -55,5 +55,5 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="sun.cpu.endian" value="little"/>
   </properties>
-  <testcase classname="com.tsoft.librusec.MainTest" name="test" time="0.005"/>
+  <testcase classname="com.tsoft.librusec.dto.LibraryTest" name="test" time="0.003"/>
 </testsuite>

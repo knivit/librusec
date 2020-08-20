@@ -3,6 +3,7 @@ package com.tsoft.librusec.service.writer;
 import com.tsoft.librusec.dto.Book;
 import com.tsoft.librusec.dto.Library;
 import com.tsoft.librusec.dto.Section;
+import com.tsoft.librusec.service.library.LibraryService;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -14,8 +15,10 @@ import java.util.ArrayList;
 
 public class HtmlLibraryWriter implements LibraryWriter {
 
+    private static final int PAGE_SIZE = 500;
+
+    private final LibraryService libraryService = new LibraryService();
     private String outputFolder;
-    private Library library = new Library();
 
     @Override
     public void open(String folderName) throws Exception {
@@ -30,81 +33,83 @@ public class HtmlLibraryWriter implements LibraryWriter {
     }
 
     @Override
-    public void accept(Book book) {
-        library.addBook(book);
+    public void process(Library library) throws IOException {
+        ArrayList<Section> sections = libraryService.getSections(library);
+
+        writeIndexPage(sections);
+
+        for (Section section : sections) {
+            for (int page = 0; page * PAGE_SIZE < section.count; page ++) {
+                writePage(library, section, page);
+            }
+        }
     }
 
-    @Override
-    public void close() throws IOException {
-        ArrayList<Section> sections = library.getSections();
+    private void writePage(Library library, Section section, int page) throws IOException {
+        String outputFileName = outputFolder + "/a_" + Integer.toHexString(section.letter) + "_" + page + ".html";
 
-        String outputFileName = outputFolder + "/index.html";
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8));
-        writer.write(
-            "<!DOCTYPE html>\n" +
-            "<html>\n" +
-            "<head>\n" +
-            "<meta charset=\"utf-8\">" +
-            "<title>LibRuSec</title>\n" +
-            "<link rel='stylesheet' href='default.css'/>\n" +
-            "</head>\n" +
-            "<body>");
-
-        // by authors
-        writer.write("\n<h2>\u041f\u043e \u0430\u0432\u0442\u043e\u0440\u0430\u043c:</h2>\n");
-        for (Section section : sections) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {
             String name = (section.letter == 0 ? "0-9, eng" : String.valueOf(section.letter));
-            writer.write("<a href='a_" + Integer.toHexString(section.letter) + "_0.html'>" + name + " (" + section.count + ")</a>");
-            writer.write("<br>\n");
-        }
-        writer.write("</body>\n</html>\n");
-        writer.close();
+            writeHtmlHeader(writer, name);
+            writeTitle(writer, name);
 
-        int pageSize = 500;
-        for (Section section : sections) {
-            for (int page = 0; page * pageSize < section.count; page++) {
-                outputFileName = outputFolder + "/a_" + Integer.toHexString(section.letter) + "_" + page + ".html";
-                writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8));
-
-                String name = (section.letter == 0 ? "0-9, eng" : String.valueOf(section.letter));
-                writeHtmlHeader(writer, name);
-
-                writeTitle(writer, name);
-
-                String firstPage = "%s", prevPage = "%s";
-                if (page > 0) {
-                    firstPage = "<a href='a_" + Integer.toHexString(section.letter) + "_0.html'>%s [1]</a>";
-                    prevPage = "<a href='a_" + Integer.toHexString(section.letter) + "_" + (page - 1) + ".html'>%s [" + page + "]</a>";
-                }
-
-                String lastPage = "%s", nextPage = "%s";
-                int n = (section.count / pageSize);
-                if (page < n) {
-                    lastPage = "<a href='a_" + Integer.toHexString(section.letter) + "_" + n + ".html'>%s [" + (n + 1) + "]</a>";
-                    nextPage = "<a href='a_" + Integer.toHexString(section.letter) + "_" + (page + 1) + ".html'>%s [" + (page + 2) + "]</a>";
-                }
-
-                writeNavigationBar(writer, firstPage, prevPage, page, nextPage, lastPage);
-                writer.write("<br>");
-
-                writeTableHeader(writer);
-
-                String lastAuthor = "";
-                for (int i = page*pageSize; i < Math.min(section.count, (page+1)*pageSize); i++) {
-                    Book book = library.getBook(section.firstBookIndex + i);
-
-                    String author = (book.authors == null ? "" : book.authors);
-                    if (author.equals(lastAuthor)) author = "";
-                    else lastAuthor = author;
-
-                    writeBook(writer, book, author);
-                }
-
-                writer.write("</table>\n");
-                writer.write("</body>\n");
-                writer.write("</html>\n");
-                writer.close();
+            String firstPage = "%s", prevPage = "%s";
+            if (page > 0) {
+                firstPage = "<a href='a_" + Integer.toHexString(section.letter) + "_0.html'>%s [1]</a>";
+                prevPage = "<a href='a_" + Integer.toHexString(section.letter) + "_" + (page - 1) + ".html'>%s [" + page + "]</a>";
             }
+
+            String lastPage = "%s", nextPage = "%s";
+            int n = (section.count / PAGE_SIZE);
+            if (page < n) {
+                lastPage = "<a href='a_" + Integer.toHexString(section.letter) + "_" + n + ".html'>%s [" + (n + 1) + "]</a>";
+                nextPage = "<a href='a_" + Integer.toHexString(section.letter) + "_" + (page + 1) + ".html'>%s [" + (page + 2) + "]</a>";
+            }
+
+            writeNavigationBar(writer, firstPage, prevPage, page, nextPage, lastPage);
+            writer.write("<br>");
+
+            writeTableHeader(writer);
+
+            String lastAuthor = "";
+            for (int i = page * PAGE_SIZE; i < Math.min(section.count, (page + 1) * PAGE_SIZE); i++) {
+                Book book = library.getBook(section.firstBookIndex + i);
+
+                String author = (book.authors == null ? "" : book.authors);
+                if (author.equals(lastAuthor)) author = "";
+                else lastAuthor = author;
+
+                writeBook(writer, book, author);
+            }
+
+            writer.write("</table>\n");
+            writer.write("</body>\n");
+            writer.write("</html>\n");
+        }
+    }
+
+    private void writeIndexPage(ArrayList<Section> sections) throws IOException {
+        String outputFileName = outputFolder + "/index.html";
+
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {
+            writer.write(
+                "<!DOCTYPE html>\n" +
+                    "<html>\n" +
+                    "<head>\n" +
+                    "<meta charset=\"utf-8\">" +
+                    "<title>LibRuSec</title>\n" +
+                    "<link rel='stylesheet' href='default.css'/>\n" +
+                    "</head>\n" +
+                    "<body>");
+
+            // by authors
+            writer.write("\n<h2>\u041f\u043e \u0430\u0432\u0442\u043e\u0440\u0430\u043c:</h2>\n");
+            for (Section section : sections) {
+                String name = (section.letter == 0 ? "0-9, eng" : String.valueOf(section.letter));
+                writer.write("<a href='a_" + Integer.toHexString(section.letter) + "_0.html'>" + name + " (" + section.count + ")</a>");
+                writer.write("<br>\n");
+            }
+            writer.write("</body>\n</html>\n");
         }
     }
 

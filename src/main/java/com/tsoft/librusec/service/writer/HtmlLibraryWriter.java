@@ -125,6 +125,8 @@ public class HtmlLibraryWriter implements LibraryWriter {
             "<meta charset=\"utf-8\">" +
             "<title>LibRuSec " + name + "</title>\n" +
             "<link rel='stylesheet' href='default.css'>\n" +
+            "<script type='text/javascript' src='inflate.js'></script>\n" +
+            "<script type='text/javascript' src='z-worker.js'></script>\n" +
             "<script type='text/javascript' src='zip.js'></script>\n" +
             "<script type='text/javascript' src='code.js'></script>\n" +
             "</head>\n" +

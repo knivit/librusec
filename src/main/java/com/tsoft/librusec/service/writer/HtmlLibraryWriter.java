@@ -1,9 +1,9 @@
 package com.tsoft.librusec.service.writer;
 
-import com.tsoft.librusec.dto.Book;
-import com.tsoft.librusec.dto.Config;
-import com.tsoft.librusec.dto.Library;
-import com.tsoft.librusec.dto.Section;
+import com.tsoft.librusec.service.library.Book;
+import com.tsoft.librusec.service.config.Config;
+import com.tsoft.librusec.service.library.Library;
+import com.tsoft.librusec.service.library.Section;
 import com.tsoft.librusec.service.library.LibraryService;
 
 import java.io.*;

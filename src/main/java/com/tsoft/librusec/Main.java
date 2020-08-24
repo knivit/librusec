@@ -1,8 +1,10 @@
 package com.tsoft.librusec;
 
-import com.tsoft.librusec.dto.Config;
-import com.tsoft.librusec.service.LibraryReferenceGenerator;
+import com.tsoft.librusec.service.config.Config;
+import com.tsoft.librusec.service.library.LibraryReferenceGenerator;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 public class Main {
 
     public static void main(String[] args) throws Exception {

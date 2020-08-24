@@ -1,8 +1,7 @@
-package com.tsoft.librusec.service;
+package com.tsoft.librusec.service.library;
 
-import com.tsoft.librusec.dto.Config;
-import com.tsoft.librusec.dto.Library;
-import com.tsoft.librusec.service.library.LibraryService;
+import com.tsoft.librusec.service.config.Config;
+import com.tsoft.librusec.service.config.ConfigService;
 import com.tsoft.librusec.service.writer.CsvLibraryWriter;
 import com.tsoft.librusec.service.writer.HtmlLibraryWriter;
 import com.tsoft.librusec.service.writer.LibraryWriter;
@@ -17,10 +16,11 @@ import java.util.List;
 @Slf4j
 public class LibraryReferenceGenerator {
 
+    private final ConfigService configService = new ConfigService();
     private final LibraryService libraryService = new LibraryService();
 
     public Config prepareConfig(String booksFolder) {
-        Config config = FileUtil.loadConfig();
+        Config config = configService.loadConfig();
         if (config != null && config.getBooksFolder() != null &&
             Files.exists(Path.of(config.getBooksFolder())) && config.getBooksFolder().equals(booksFolder)) {
             return config;
@@ -44,7 +44,7 @@ public class LibraryReferenceGenerator {
         FileUtil.createDirectories(config.getHtmlFolder());
         FileUtil.createDirectories(config.getCsvFolder());
 
-        FileUtil.saveConfig(config);
+        configService.saveConfig(config);
         return config;
     }
 

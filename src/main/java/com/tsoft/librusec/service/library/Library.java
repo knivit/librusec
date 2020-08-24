@@ -1,4 +1,4 @@
-package com.tsoft.librusec.dto;
+package com.tsoft.librusec.service.library;
 
 import java.io.*;
 import java.util.ArrayList;

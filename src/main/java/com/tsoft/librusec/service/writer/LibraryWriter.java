@@ -1,7 +1,7 @@
 package com.tsoft.librusec.service.writer;
 
-import com.tsoft.librusec.dto.Config;
-import com.tsoft.librusec.dto.Library;
+import com.tsoft.librusec.service.config.Config;
+import com.tsoft.librusec.service.library.Library;
 
 public interface LibraryWriter {
 

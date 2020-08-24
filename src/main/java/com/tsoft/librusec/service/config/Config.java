@@ -1,4 +1,4 @@
-package com.tsoft.librusec.dto;
+package com.tsoft.librusec.service.config;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,9 +1,6 @@
 package com.tsoft.librusec.service.library;
 
-import com.tsoft.librusec.dto.Book;
-import com.tsoft.librusec.dto.Config;
-import com.tsoft.librusec.dto.Library;
-import com.tsoft.librusec.dto.Section;
+import com.tsoft.librusec.service.config.Config;
 import com.tsoft.librusec.service.parser.Fb2Parser;
 import com.tsoft.librusec.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +35,7 @@ public class LibraryService {
             List<Book> books = parser.parse(files[i]);
 
             Library library = new Library(books);
-            serializeToFile(library, config.getCacheFolder() + "/" + FileUtil.changeExtension(fileName, ".ser"));
+            serializeToFile(library, config.getLibraryFolder() + "/" + FileUtil.changeExtension(fileName, ".ser"));
 
             long time = (System.currentTimeMillis() - millis) / 1000;
             System.out.println(" read in " + time + " sec, " + books.size() + " book(s) found");
@@ -80,9 +77,9 @@ public class LibraryService {
     }
 
     public Library load(Config config) {
-        log.info("Loading library {}", config.getCacheFolder());
+        log.info("Loading library {}", config.getLibraryFolder());
 
-        File root = new File(config.getCacheFolder());
+        File root = new File(config.getLibraryFolder());
         File[] files = root.listFiles((dir, name) -> name.endsWith(".ser"));
         if (files == null || files.length == 0) {
             return new Library();

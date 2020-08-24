@@ -1,6 +1,6 @@
 package com.tsoft.librusec.service.parser;
 
-import com.tsoft.librusec.dto.Book;
+import com.tsoft.librusec.service.library.Book;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -71,7 +71,7 @@ public class Fb2Parser {
                 book.date = getValue(title, "<date>", "</date>");
                 books.add(book);
 
-                if ((progressBar ++ % 100) == 0) System.out.print('.');
+                if ((progressBar ++ % 1000) == 0) System.out.print('.');
             }
         }
 

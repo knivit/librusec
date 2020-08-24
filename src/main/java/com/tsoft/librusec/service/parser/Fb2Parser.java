@@ -1,7 +1,5 @@
 package com.tsoft.librusec.service.parser;
 
-import com.tsoft.librusec.dto.Library;
-import com.tsoft.librusec.service.writer.LibraryWriter;
 import com.tsoft.librusec.dto.Book;
 
 import java.io.*;
@@ -15,12 +13,12 @@ import java.util.zip.ZipInputStream;
 public class Fb2Parser {
     public Fb2Parser() { }
 
-    public Library parse(String fileName) throws IOException {
-        Library library = new Library();
+    public List<Book> parse(File zipFile) throws IOException {
+        List<Book> books = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         // file names in the zip are UTF-8
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(fileName), StandardCharsets.UTF_8)) {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile), StandardCharsets.UTF_8)) {
             ZipEntry entry;
 
             int progressBar = 0;
@@ -29,10 +27,6 @@ public class Fb2Parser {
                     errors.add("Unsupported extension of " + entry.getName() + ": book skipped");
                     continue;
                 }
-
-                Book book = new Book();
-                book.zipFileName = new File(fileName).getName();
-                book.fileName = entry.getName();
 
                 byte[] buf = new byte[2048];
                 int bufSize = zis.read(buf);
@@ -66,13 +60,16 @@ public class Fb2Parser {
                     continue;
                 }
 
+                Book book = new Book();
+                book.zipFileName = zipFile.getName();
+                book.fileName = entry.getName();
                 book.genre = getValue(title, "<genre>", "</genre>");
                 book.title = getValue(title, "<book-title>", "</book-title>");
                 book.lang = getValue(title, "<lang>", "</lang>");
                 book.authors = getAuthors(title);
                 book.annotation = getValue(title, "<annotation>", "</annotation");
                 book.date = getValue(title, "<date>", "</date>");
-                library.addBook(book);
+                books.add(book);
 
                 if ((progressBar ++ % 100) == 0) System.out.print('.');
             }
@@ -82,7 +79,7 @@ public class Fb2Parser {
             System.err.println("\n" + String.join("\n", errors));
         }
 
-        return library;
+        return books;
     }
 
     private String getAuthors(String title) {

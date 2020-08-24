@@ -17,12 +17,9 @@ public class LibraryServiceTest {
     @Test
     public void test() {
         Library library = new Library();
-        Book book0 = createBook("0");
-        library.addBook(book0);
-        library.addBook(createBook("English"));
-
-        Book book1 = createBook("\u0420\u0443\u0441\u0441\u043a\u0438\u0439");
-        library.addBook(book1);
+        library.getBooks().add(createBook("0"));
+        library.getBooks().add(createBook("English"));
+        library.getBooks().add(createBook("\u0420\u0443\u0441\u0441\u043a\u0438\u0439"));
 
         ArrayList<Section> sections = libraryService.getSections(library);
 

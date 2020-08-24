@@ -1,49 +1,55 @@
 package com.tsoft.librusec.service.library;
 
 import com.tsoft.librusec.dto.Book;
+import com.tsoft.librusec.dto.Config;
 import com.tsoft.librusec.dto.Library;
 import com.tsoft.librusec.dto.Section;
 import com.tsoft.librusec.service.parser.Fb2Parser;
 import com.tsoft.librusec.util.FileUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
+@Slf4j
 public class LibraryService {
 
-    public void process(String folder) throws IOException {
-        File[] files = findZipFiles(folder);
+    public void process(Config config) throws IOException {
+        log.info("Processing directory {}", config.getBooksFolder());
+
+        File[] files = findZipFiles(config.getBooksFolder());
         if (files == null) {
-            System.out.println("Zip files in " + folder + " not found");
+            log.error("Zip files in {} not found, processing skipped", config.getBooksFolder());
             return;
         }
 
         int totalCount = 0;
         long totalTime = 0;
         for (int i = 0; i < files.length; i ++) {
-            String fileName = files[i].getAbsolutePath();
-            System.out.print("File " + (i + 1) + " of " + files.length + " " + files[i].getName() + ": ");
+            String fileName = files[i].getName();
+            System.out.print("File " + (i + 1) + " of " + files.length + " " + fileName + ": ");
 
             long millis = System.currentTimeMillis();
 
             Fb2Parser parser = new Fb2Parser();
-            Library library = parser.parse(fileName);
-            serializeToFile(library, FileUtil.changeExtension(fileName, ".ser"));
+            List<Book> books = parser.parse(files[i]);
+
+            Library library = new Library(books);
+            serializeToFile(library, config.getCacheFolder() + "/" + FileUtil.changeExtension(fileName, ".ser"));
 
             long time = (System.currentTimeMillis() - millis) / 1000;
-            System.out.println(" read in " + time + " sec, " + library.getBookCount() + " book(s) found");
+            System.out.println(" read in " + time + " sec, " + books.size() + " book(s) found");
 
-            totalCount += library.getBookCount();
+            totalCount += books.size();
             totalTime += time;
         }
 
-        System.out.println(totalCount + " file(s) processed in " + totalTime + " sec");
-        System.out.println("See results in " + folder);
+        log.info("{} file(s) processed in {} sec", totalCount, totalTime);
     }
 
-    // books must be sorted by authors
     public ArrayList<Section> getSections(Library library) {
         ArrayList<Section> sections = new ArrayList<>();
 
@@ -54,6 +60,7 @@ public class LibraryService {
         sections.add(section);
 
         int n = 0;
+        sortByAuthor(library);
         for (Book book : library.getBooks()) {
             char letter = Character.toUpperCase(book.authors.charAt(0));
 
@@ -72,17 +79,10 @@ public class LibraryService {
         return sections;
     }
 
-    public void serializeToFile(Library library, String fileName) {
-        try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileName));
-             ObjectOutputStream oos = new ObjectOutputStream(out)) {
-            oos.writeObject(library);
-        } catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
-    }
+    public Library load(Config config) {
+        log.info("Loading library {}", config.getCacheFolder());
 
-    public Library deserializeFromFolder(String folder) {
-        File root = new File(folder);
+        File root = new File(config.getCacheFolder());
         File[] files = root.listFiles((dir, name) -> name.endsWith(".ser"));
         if (files == null || files.length == 0) {
             return new Library();
@@ -91,11 +91,19 @@ public class LibraryService {
         Library result = new Library();
         for (File file : files) {
             Library library = deserializeFromFile(file.getAbsolutePath());
-            result.unionAll(library);
+            unionAll(result, library);
         }
 
-        result.sortByAuthor();
         return result;
+    }
+
+    private void serializeToFile(Library library, String fileName) {
+        try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileName));
+             ObjectOutputStream oos = new ObjectOutputStream(out)) {
+            oos.writeObject(library);
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     private Library deserializeFromFile(String fileName) {
@@ -111,5 +119,13 @@ public class LibraryService {
         File root = new File(folder);
         return root.listFiles((dir, name) -> name.endsWith(".zip") &&
             !Files.exists(Path.of(FileUtil.changeExtension(dir.getAbsolutePath() + "/" + name, ".ser"))));
+    }
+
+    private void unionAll(Library dest, Library src) {
+        dest.getBooks().addAll(src.getBooks());
+    }
+
+    private void sortByAuthor(Library library) {
+        library.getBooks().sort((b1, b2) -> b1.authors.compareToIgnoreCase(b2.authors));
     }
 }

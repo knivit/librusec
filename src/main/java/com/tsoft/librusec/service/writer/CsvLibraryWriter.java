@@ -1,48 +1,48 @@
 package com.tsoft.librusec.service.writer;
 
 import com.tsoft.librusec.dto.Book;
+import com.tsoft.librusec.dto.Config;
 import com.tsoft.librusec.dto.Library;
+import lombok.extern.slf4j.Slf4j;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 public class CsvLibraryWriter implements LibraryWriter {
-    private BufferedWriter writer;
 
     @Override
-    public void open(String outputFolder) throws IOException {
+    public void process(Config config, Library library) throws Exception {
+        log.info("Generating index {}", config.getCsvFolder());
+
+        try (BufferedWriter writer = prepareWriter(config.getCsvFolder())) {
+            for (Book book : library.getBooks()) {
+                writer.write(toCsv(book.lang));
+                writer.write(',');
+                writer.write(toCsv(book.genre));
+                writer.write(',');
+                writer.write(toCsv(book.date));
+                writer.write(',');
+                writer.write(toCsv(book.title));
+                writer.write(',');
+                writer.write(toCsv(book.authors));
+                writer.write(',');
+                writer.write(toCsv(book.zipFileName));
+                writer.write(',');
+                writer.write(toCsv(book.fileName));
+                writer.newLine();
+            }
+        }
+    }
+
+    private BufferedWriter prepareWriter(String outputFolder) throws IOException {
         String outputFileName = outputFolder + "/index.csv";
-        writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8));
 
         writer.write("lang,genre,date,title,author,zip,file");
         writer.newLine();
-        writer.flush();
-    }
 
-    @Override
-    public void process(Library library) throws IOException {
-        for (Book book : library.getBooks()) {
-            writer.write(toCsv(book.lang));
-            writer.write(',');
-            writer.write(toCsv(book.genre));
-            writer.write(',');
-            writer.write(toCsv(book.date));
-            writer.write(',');
-            writer.write(toCsv(book.title));
-            writer.write(',');
-            writer.write(toCsv(book.authors));
-            writer.write(',');
-            writer.write(toCsv(book.zipFileName));
-            writer.write(',');
-            writer.write(toCsv(book.fileName));
-            writer.newLine();
-        }
-
-        writer.flush();
-        writer.close();
+        return writer;
     }
 
     private String toCsv(String value) {

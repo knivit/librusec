@@ -77,7 +77,7 @@ function download(zipFileName, fileName, a) {
 
 function dwl(elmnt, zipFileName, fileName) {
     if (!elmnt.download) {
-        download("../" + zipFileName, fileName, elmnt);
+        download("/books/" + zipFileName, fileName, elmnt);
         event.preventDefault();
         return false;
     }

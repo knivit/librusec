@@ -1,6 +1,7 @@
 package com.tsoft.librusec.service.writer;
 
 import com.tsoft.librusec.dto.Book;
+import com.tsoft.librusec.dto.Config;
 import com.tsoft.librusec.dto.Library;
 import com.tsoft.librusec.dto.Section;
 import com.tsoft.librusec.service.library.LibraryService;
@@ -18,34 +19,30 @@ public class HtmlLibraryWriter implements LibraryWriter {
     private static final int PAGE_SIZE = 500;
 
     private final LibraryService libraryService = new LibraryService();
-    private String outputFolder;
 
     @Override
-    public void open(String folderName) throws Exception {
-        outputFolder = folderName + "/html";
-        Files.createDirectories(Paths.get(outputFolder));
+    public void process(Config config, Library library) throws Exception {
+        prepare(config.getHtmlFolder());
 
-        for (String fileName : new String[] { "code.js", "default.css", "zip.js", "z-worker.js", "inflate.js" }) {
+        ArrayList<Section> sections = libraryService.getSections(library);
+        writeIndexPage(config.getHtmlFolder(), sections);
+
+        for (Section section : sections) {
+            for (int page = 0; page * PAGE_SIZE < section.count; page ++) {
+                writePage(config.getHtmlFolder(), library, section, page);
+            }
+        }
+    }
+
+    private void prepare(String outputFolder) throws Exception {
+        for (String fileName : new String[] {"code.js", "default.css", "favicon.png"}) {
             Path src = Paths.get(getClass().getResource("/" + fileName).toURI());
             Path dst = Paths.get(outputFolder, fileName);
             Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
-    @Override
-    public void process(Library library) throws IOException {
-        ArrayList<Section> sections = libraryService.getSections(library);
-
-        writeIndexPage(sections);
-
-        for (Section section : sections) {
-            for (int page = 0; page * PAGE_SIZE < section.count; page ++) {
-                writePage(library, section, page);
-            }
-        }
-    }
-
-    private void writePage(Library library, Section section, int page) throws IOException {
+    private void writePage(String outputFolder, Library library, Section section, int page) throws IOException {
         String outputFileName = outputFolder + "/a_" + Integer.toHexString(section.letter) + "_" + page + ".html";
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {
@@ -88,7 +85,7 @@ public class HtmlLibraryWriter implements LibraryWriter {
         }
     }
 
-    private void writeIndexPage(ArrayList<Section> sections) throws IOException {
+    private void writeIndexPage(String outputFolder, ArrayList<Section> sections) throws IOException {
         String outputFileName = outputFolder + "/index.html";
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {

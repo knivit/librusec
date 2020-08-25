@@ -17,9 +17,9 @@ public class LibraryService {
     public void process(Config config) throws IOException {
         log.info("Processing directory {}", config.getBooksFolder());
 
-        File[] files = findZipFiles(config.getBooksFolder());
+        File[] files = findZipFiles(config);
         if (files == null) {
-            log.error("Zip files in {} not found, processing skipped", config.getBooksFolder());
+            log.error("Non-processed zip files in {} not found, processing skipped", config.getBooksFolder());
             return;
         }
 
@@ -112,10 +112,10 @@ public class LibraryService {
         }
     }
 
-    private File[] findZipFiles(String folder) {
-        File root = new File(folder);
+    private File[] findZipFiles(Config config) {
+        File root = new File(config.getBooksFolder());
         return root.listFiles((dir, name) -> name.endsWith(".zip") &&
-            !Files.exists(Path.of(FileUtil.changeExtension(dir.getAbsolutePath() + "/" + name, ".ser"))));
+            !Files.exists(Path.of(config.getLibraryFolder(), FileUtil.changeExtension(name, ".ser"))));
     }
 
     private void unionAll(Library dest, Library src) {

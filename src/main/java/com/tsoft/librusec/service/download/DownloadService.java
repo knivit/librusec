@@ -3,21 +3,27 @@ package com.tsoft.librusec.service.download;
 import com.tsoft.librusec.service.config.Config;
 import com.tsoft.librusec.service.config.ConfigService;
 import com.tsoft.librusec.util.FileUtil;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Enumeration;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+@Slf4j
 public class DownloadService {
 
     private final ConfigService configService = new ConfigService();
 
     public DownloadResult download(String zipFileName, String bookFileName) {
-        Config config = configService.loadConfig();
+        log.info("Downloading {}#{}", zipFileName, bookFileName);
+
+        Config config = configService.getConfig();
         if (config == null) {
             return DownloadResult.builder()
                 .status(DownloadResult.Status.FAIL)
@@ -25,33 +31,80 @@ public class DownloadService {
                 .build();
         }
 
-        try (ZipFile file = new ZipFile(zipFileName, StandardCharsets.UTF_8)) {
-            Enumeration<? extends ZipEntry> entries = file.entries();
+        DownloadResult cached = findCachedFile(config, zipFileName, bookFileName);
+        if (cached != null) {
+            log.info("Found cached file {}#{}, {}", zipFileName, bookFileName, cached);
+            return cached;
+        }
 
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
+        Instant now = Instant.now();
+        File zipFile = Path.of(config.getBooksFolder(), zipFileName).toFile();
+        DownloadResult extracted = extractFile(config, zipFile, bookFileName);
+        log.info("Extracting {}#{} done, {}, took {}", zipFileName, bookFileName, extracted, Duration.between(now, Instant.now()));
 
-                if (entry.getName().equals(bookFileName)) {
-                    String cacheFolder = config.getCacheFolder() + "/" + FileUtil.changeExtension(zipFileName, "");
-                    FileUtil.createDirectories(cacheFolder);
+        return extracted;
+    }
 
-                    Path resultFile = Path.of(cacheFolder, bookFileName);
-                    Files.copy(file.getInputStream(entry), resultFile, StandardCopyOption.REPLACE_EXISTING);
-                    return DownloadResult.builder()
-                        .fileName(resultFile)
-                        .status(DownloadResult.Status.SUCCESS)
-                        .build();
-                }
-            }
+    private String getZipFileCacheFolder(Config config, String zipFileName) {
+        return config.getCacheFolder() + "/" + FileUtil.deleteExtension(zipFileName);
+    }
 
+    private DownloadResult findCachedFile(Config config, String zipFileName, String bookFileName) {
+        String cacheFolder = getZipFileCacheFolder(config, zipFileName);
+        Path cachedFile = Path.of(cacheFolder, bookFileName);
+
+        if (Files.exists(cachedFile)) {
             return DownloadResult.builder()
-                .status(DownloadResult.Status.NOT_FOUND)
-                .build();
-        } catch (Exception ex) {
-            return DownloadResult.builder()
-                .status(DownloadResult.Status.FAIL)
-                .errorMessage(ex.getMessage())
+                .fileName(cachedFile)
+                .status(DownloadResult.Status.SUCCESS)
                 .build();
         }
+
+        return null;
+    }
+
+    private DownloadResult extractFile(Config config, File zipFile, String fileName) {
+        try (ZipFile file = new ZipFile(zipFile, StandardCharsets.UTF_8)) {
+            return file.stream()
+                .filter(e -> e.getName().equals(fileName))
+                .findFirst()
+                .map(e -> doExtractFile(config, file, e))
+                .orElse(fileNotFound());
+        } catch (Exception ex) {
+            return exceptionOccurred(ex, zipFile.getName(), fileName);
+        }
+    }
+
+    private DownloadResult doExtractFile(Config config, ZipFile file, ZipEntry entry) {
+        try {
+            String zipFileName = Path.of(file.getName()).getFileName().toString();
+            String cacheFolder = getZipFileCacheFolder(config, zipFileName);
+            FileUtil.createDirectories(cacheFolder);
+
+            Path extractedFile = Path.of(cacheFolder, entry.getName());
+            Files.copy(file.getInputStream(entry), extractedFile, StandardCopyOption.REPLACE_EXISTING);
+
+            return DownloadResult.builder()
+                .fileName(extractedFile)
+                .status(DownloadResult.Status.SUCCESS)
+                .build();
+        } catch (Exception ex) {
+            return exceptionOccurred(ex, file.getName(), entry.getName());
+        }
+    }
+
+    private DownloadResult fileNotFound() {
+        return DownloadResult.builder()
+            .status(DownloadResult.Status.NOT_FOUND)
+            .build();
+    }
+
+    private DownloadResult exceptionOccurred(Exception ex, String zipFileName, String entryName) {
+        log.error("Error extracting {}#{}", zipFileName, entryName, ex);
+
+        return DownloadResult.builder()
+            .status(DownloadResult.Status.FAIL)
+            .errorMessage(ex.getMessage())
+            .build();
     }
 }

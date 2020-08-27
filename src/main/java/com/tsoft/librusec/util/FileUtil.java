@@ -27,6 +27,10 @@ public final class FileUtil {
 
     public static String changeExtension(String fileName, String ext) {
         int n = fileName.lastIndexOf('.');
-        return ((n == -1) ? fileName : fileName.substring(0, n)) + ext;
+        return ((n == -1) ? fileName + ext : fileName.substring(0, n)) + ext;
+    }
+
+    public static String deleteExtension(String fileName) {
+        return changeExtension(fileName, "");
     }
 }

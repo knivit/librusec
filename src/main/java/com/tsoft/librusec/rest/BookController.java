@@ -9,20 +9,27 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.websocket.server.PathParam;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@RestController("/books")
+@RestController
 public class BookController {
 
     private final DownloadService downloadService = new DownloadService();
 
-    @GetMapping("/zipFileName/bookFileName")
-    public ResponseEntity<Resource> download(@PathParam("zipFileName") String zipFileName, @PathParam("bookFileName") String bookFileName) {
-        DownloadResult result = downloadService.download(zipFileName, bookFileName);
+    @GetMapping("/")
+    public void defaultPage(HttpServletResponse response) throws IOException {
+        response.sendRedirect("/index.html");
+    }
+
+    @GetMapping("/books/{zipFileName}/{bookFileName:.+}")
+    public ResponseEntity<Resource> download(@PathVariable("zipFileName") String zipFileName, @PathVariable("bookFileName") String bookFileName) {
+        DownloadResult result = downloadService.download(zipFileName + ".zip", bookFileName);
 
         return switch (result.getStatus()) {
             case SUCCESS -> ok(result.getFileName());

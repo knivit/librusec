@@ -5,6 +5,8 @@ import com.tsoft.librusec.service.config.Config;
 import com.tsoft.librusec.service.library.Library;
 import com.tsoft.librusec.service.library.Section;
 import com.tsoft.librusec.service.library.LibraryService;
+import com.tsoft.librusec.util.FileUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +16,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 
+@Slf4j
 public class HtmlLibraryWriter implements LibraryWriter {
 
     private static final int PAGE_SIZE = 500;
@@ -22,6 +25,8 @@ public class HtmlLibraryWriter implements LibraryWriter {
 
     @Override
     public void process(Config config, Library library) throws Exception {
+        log.info("Generating HTML index {}", config.getHtmlFolder());
+
         prepare(config.getHtmlFolder());
 
         ArrayList<Section> sections = libraryService.getSections(library);
@@ -35,8 +40,8 @@ public class HtmlLibraryWriter implements LibraryWriter {
     }
 
     private void prepare(String outputFolder) throws Exception {
-        for (String fileName : new String[] {"code.js", "default.css", "favicon.png"}) {
-            Path src = Paths.get(getClass().getResource("/" + fileName).toURI());
+        for (String fileName : new String[] {"/code.js", "/default.css", "/favicon.ico"}) {
+            Path src = Paths.get(getClass().getResource(fileName).toURI());
             Path dst = Paths.get(outputFolder, fileName);
             Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
         }
@@ -122,9 +127,6 @@ public class HtmlLibraryWriter implements LibraryWriter {
             "<meta charset=\"utf-8\">" +
             "<title>LibRuSec " + name + "</title>\n" +
             "<link rel='stylesheet' href='default.css'>\n" +
-            "<script type='text/javascript' src='inflate.js'></script>\n" +
-            "<script type='text/javascript' src='z-worker.js'></script>\n" +
-            "<script type='text/javascript' src='zip.js'></script>\n" +
             "<script type='text/javascript' src='code.js'></script>\n" +
             "</head>\n" +
             "<body>");
@@ -134,7 +136,7 @@ public class HtmlLibraryWriter implements LibraryWriter {
         writer.write(
             "<tr>" +
             "<td>" + author + "</td>" +
-            "<td><a href='#' onclick=\"dwl(this,'" + book.zipFileName + "','" + book.fileName + "')\">" + (book.title == null ? "" : book.title) + "</a></td>" +
+            "<td><a href='#' onclick=\"dwl(this,'" + FileUtil.deleteExtension(book.zipFileName) + "','" + book.fileName + "')\">" + (book.title == null ? "" : book.title) + "</a></td>" +
             "<td>" + (book.genre == null ? "" : book.genre) + "</td>" +
             "<td>" + (book.date == null ? "" : book.date) + "</td>" +
             "<td>" + (book.annotation == null ? "" : book.annotation) + "</td>" +

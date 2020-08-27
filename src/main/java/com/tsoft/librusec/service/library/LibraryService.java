@@ -6,22 +6,14 @@ import com.tsoft.librusec.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 public class LibraryService {
 
-    public void process(Config config) throws IOException {
+    public void process(Config config, File[] files) throws IOException {
         log.info("Processing directory {}", config.getBooksFolder());
-
-        File[] files = findZipFiles(config);
-        if (files == null) {
-            log.error("Non-processed zip files in {} not found, processing skipped", config.getBooksFolder());
-            return;
-        }
 
         int totalCount = 0;
         long totalTime = 0;
@@ -110,12 +102,6 @@ public class LibraryService {
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
-    }
-
-    private File[] findZipFiles(Config config) {
-        File root = new File(config.getBooksFolder());
-        return root.listFiles((dir, name) -> name.endsWith(".zip") &&
-            !Files.exists(Path.of(config.getLibraryFolder(), FileUtil.changeExtension(name, ".ser"))));
     }
 
     private void unionAll(Library dest, Library src) {

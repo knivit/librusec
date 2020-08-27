@@ -13,7 +13,7 @@ public class CsvLibraryWriter implements LibraryWriter {
 
     @Override
     public void process(Config config, Library library) throws Exception {
-        log.info("Generating index {}", config.getCsvFolder());
+        log.info("Generating CSV index {}", config.getCsvFolder());
 
         try (BufferedWriter writer = prepareWriter(config.getCsvFolder())) {
             for (Book book : library.getBooks()) {

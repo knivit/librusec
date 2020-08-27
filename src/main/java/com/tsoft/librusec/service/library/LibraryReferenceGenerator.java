@@ -8,6 +8,7 @@ import com.tsoft.librusec.service.writer.LibraryWriter;
 import com.tsoft.librusec.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -20,7 +21,7 @@ public class LibraryReferenceGenerator {
     private final LibraryService libraryService = new LibraryService();
 
     public Config prepareConfig(String booksFolder) {
-        Config config = configService.loadConfig();
+        Config config = configService.getConfig();
         if (config != null && config.getBooksFolder() != null &&
             Files.exists(Path.of(config.getBooksFolder())) && config.getBooksFolder().equals(booksFolder)) {
             return config;
@@ -49,7 +50,13 @@ public class LibraryReferenceGenerator {
     }
 
     public void generate(Config config) throws Exception {
-        libraryService.process(config);
+        File[] files = findZipFiles(config);
+        if (files == null || files.length == 0) {
+            log.info("Non-processed zip files in {} not found, processing skipped", config.getBooksFolder());
+            return;
+        }
+
+        libraryService.process(config, files);
 
         Library library = libraryService.load(config);
 
@@ -57,5 +64,11 @@ public class LibraryReferenceGenerator {
         for (LibraryWriter libraryWriter : libraryWriters) {
             libraryWriter.process(config, library);
         }
+    }
+
+    private File[] findZipFiles(Config config) {
+        File root = new File(config.getBooksFolder());
+        return root.listFiles((dir, name) -> name.endsWith(".zip") &&
+            !Files.exists(Path.of(config.getLibraryFolder(), FileUtil.changeExtension(name, ".ser"))));
     }
 }

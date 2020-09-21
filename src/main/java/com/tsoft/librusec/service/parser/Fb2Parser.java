@@ -1,6 +1,7 @@
 package com.tsoft.librusec.service.parser;
 
 import com.tsoft.librusec.service.library.Book;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -10,10 +11,10 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+@Slf4j
 public class Fb2Parser {
-    public Fb2Parser() { }
 
-    public List<Book> parse(File zipFile) throws IOException {
+    public List<Book> parse(File zipFile) {
         List<Book> books = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
@@ -73,6 +74,9 @@ public class Fb2Parser {
 
                 if ((progressBar ++ % 1000) == 0) System.out.print('.');
             }
+        } catch (Exception ex) {
+            log.error("Error processing file {}", zipFile.getAbsolutePath(), ex);
+            throw new IllegalStateException(ex);
         }
 
         if (!errors.isEmpty()) {
@@ -100,7 +104,7 @@ public class Fb2Parser {
 
     private String getValue(String text, String startTag, String endTag) {
         ArrayList<String> values = getValueList(text, startTag, endTag);
-        if (values == null || values.isEmpty()) return null;
+        if (values.isEmpty()) return null;
 
         String val = values.get(0);
         if (values.size() > 1) {
@@ -116,8 +120,9 @@ public class Fb2Parser {
     }
 
     private ArrayList<String> getValueList(String text, String startTag, String endTag) {
-        int off = 0;
         ArrayList<String> result = new ArrayList<>();
+
+        int off = 0;
         while (true) {
             int from = text.indexOf(startTag, off);
             if (from == -1) break;
@@ -125,7 +130,7 @@ public class Fb2Parser {
             int to = text.indexOf(endTag, from + startTag.length());
             if (to == -1) break;
 
-            result.add(text.substring(from + startTag.length(), to));
+            result.add(text.substring(from + startTag.length(), to).trim());
             off = to;
         }
 

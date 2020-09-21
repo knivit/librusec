@@ -22,13 +22,13 @@ public class Main {
      */
 
     public static void main(String[] args) throws Exception {
-        if (args.length == 1 && args[0].equalsIgnoreCase("-help")) {
-            System.out.println("Usage: java -jar librusec.jar <Path to the library's folder>");
+        if (args.length != 1 || args[0].equalsIgnoreCase("-help")) {
+            System.out.println("Usage: java -jar librusec.jar <Path to the library's folder (where zips are placed)>");
             System.exit(0);
         }
 
         LibraryReferenceGenerator generator = new LibraryReferenceGenerator();
-        Config config = generator.prepareConfig(args.length == 1 ? args[0] : null);
+        Config config = generator.prepareConfig(args[0]);
         if (config != null) {
             generator.generate(config);
         }

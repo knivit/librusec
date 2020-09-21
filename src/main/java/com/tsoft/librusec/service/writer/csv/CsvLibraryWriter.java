@@ -1,8 +1,9 @@
-package com.tsoft.librusec.service.writer;
+package com.tsoft.librusec.service.writer.csv;
 
 import com.tsoft.librusec.service.library.Book;
 import com.tsoft.librusec.service.config.Config;
 import com.tsoft.librusec.service.library.Library;
+import com.tsoft.librusec.service.writer.LibraryWriter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;

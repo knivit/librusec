@@ -3,7 +3,7 @@ function dwl(a, zipFileName, fileName) {
         var clickEvent = document.createEvent("MouseEvent");
 	    clickEvent.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 
-	    a.href = "/books/" + zipFileName + "/" + fileName;
+	    a.href = "/book/" + zipFileName + "/" + fileName;
 	    a.download = fileName;
 	    a.dispatchEvent(clickEvent);
 

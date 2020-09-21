@@ -1,6 +1,10 @@
 package com.tsoft.librusec.service.library;
 
+import com.tsoft.librusec.service.cache.CacheFactory;
 import com.tsoft.librusec.service.config.Config;
+import com.tsoft.librusec.service.config.ConfigService;
+import com.tsoft.librusec.service.library.group.ByAuthorGroup;
+import com.tsoft.librusec.service.library.group.ByYearGroup;
 import com.tsoft.librusec.service.parser.Fb2Parser;
 import com.tsoft.librusec.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +15,9 @@ import java.util.List;
 
 @Slf4j
 public class LibraryService {
+    private final ConfigService configService = new ConfigService();
 
-    public void process(Config config, File[] files) throws IOException {
+    public void process(Config config, File[] files) {
         log.info("Processing directory {}", config.getBooksFolder());
 
         int totalCount = 0;
@@ -39,36 +44,70 @@ public class LibraryService {
         log.info("{} file(s) processed in {} sec", totalCount, totalTime);
     }
 
-    public ArrayList<Section> getSections(Library library) {
-        ArrayList<Section> sections = new ArrayList<>();
+    public ArrayList<ByAuthorGroup> groupByAuthor(Library library) {
+        sortByAuthor(library);
 
-        Section section = new Section();
-        section.letter = 0; // All chars before Russian 'A'
-        section.firstBookIndex = 0;
-        section.count = 0;
-        sections.add(section);
+        ArrayList<ByAuthorGroup> groups = new ArrayList<>();
+
+        ByAuthorGroup group = new ByAuthorGroup();
+        group.letter = 0; // All chars before Russian 'A'
+        group.firstBookIndex = 0;
+        group.count = 0;
+        groups.add(group);
 
         int n = 0;
-        sortByAuthor(library);
         for (Book book : library.getBooks()) {
             char letter = Character.toUpperCase(book.authors.charAt(0));
 
-            if (section.letter != letter) {
+            if (group.letter != letter) {
                 if (letter >= 0x410) {
-                    section = new Section();
-                    section.letter = letter;
-                    section.firstBookIndex = n;
-                    sections.add(section);
+                    group = new ByAuthorGroup();
+                    group.letter = letter;
+                    group.firstBookIndex = n;
+                    groups.add(group);
                 }
             }
-            section.count ++;
+            group.count ++;
             n ++;
         }
 
-        return sections;
+        return groups;
     }
 
-    public Library load(Config config) {
+    public ArrayList<ByYearGroup> groupByYear(Library library) {
+        sortByYear(library);
+
+        ArrayList<ByYearGroup> groups = new ArrayList<>();
+
+        ByYearGroup group = new ByYearGroup();
+        group.year = "<unknown>";
+        group.firstBookIndex = 0;
+        group.count = 0;
+        groups.add(group);
+
+        int n = 0;
+        for (Book book : library.getBooks()) {
+            String year = (book.date == null) ? "<unknown>" : book.date;
+
+            if (!group.year.equals(year)) {
+                group = new ByYearGroup();
+                group.year = year;
+                group.firstBookIndex = n;
+                groups.add(group);
+            }
+            group.count ++;
+            n ++;
+        }
+
+        return groups;
+    }
+
+    public Library getLibrary() {
+        return CacheFactory.getLibraryCache().get("library", () -> load());
+    }
+
+    private Library load() {
+        Config config = configService.getConfig();
         log.info("Loading library {}", config.getLibraryFolder());
 
         File root = new File(config.getLibraryFolder());
@@ -110,5 +149,12 @@ public class LibraryService {
 
     private void sortByAuthor(Library library) {
         library.getBooks().sort((b1, b2) -> b1.authors.compareToIgnoreCase(b2.authors));
+    }
+
+    private void sortByYear(Library library) {
+        library.getBooks().sort((b1, b2) ->
+            (b1.date == null) ?
+                ((b2.date == null) ? 0 : -1) :
+                    (b2.date == null) ? 1 : b1.date.compareToIgnoreCase(b2.date));
     }
 }

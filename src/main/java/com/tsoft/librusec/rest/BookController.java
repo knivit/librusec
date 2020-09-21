@@ -2,6 +2,8 @@ package com.tsoft.librusec.rest;
 
 import com.tsoft.librusec.service.download.DownloadResult;
 import com.tsoft.librusec.service.download.DownloadService;
+import com.tsoft.librusec.service.generator.GenerationResult;
+import com.tsoft.librusec.service.generator.HtmlContentGenerator;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -20,14 +22,22 @@ import java.nio.file.Path;
 @RestController
 public class BookController {
 
+    private final HtmlContentGenerator htmlContentGenerator = new HtmlContentGenerator();
     private final DownloadService downloadService = new DownloadService();
 
     @GetMapping("/")
-    public void defaultPage(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/index.html");
+    public void indexPage(HttpServletResponse response) throws IOException {
+        GenerationResult result = htmlContentGenerator.generateIndexPage(response.getWriter());
+        response.addHeader("Content-Type", "text/html; charset=utf-8");
+        response.setStatus(result == GenerationResult.SUCCESS ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
 
-    @GetMapping("/books/{zipFileName}/{bookFileName:.+}")
+/*    @GetMapping("/static/{fileName}")
+    public ResponseEntity<Resource> staticFile(@PathVariable("fileName") String fileName) {
+
+    } */
+
+    @GetMapping("/book/{zipFileName}/{bookFileName:.+}")
     public ResponseEntity<Resource> download(@PathVariable("zipFileName") String zipFileName, @PathVariable("bookFileName") String bookFileName) {
         DownloadResult result = downloadService.download(zipFileName + ".zip", bookFileName);
 
@@ -35,7 +45,6 @@ public class BookController {
             case SUCCESS -> ok(result.getFileName());
             case NOT_FOUND -> ResponseEntity.notFound().build();
             case FAIL -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            default -> ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         };
     }
 

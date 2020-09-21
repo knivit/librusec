@@ -2,7 +2,7 @@ package com.tsoft.librusec.service;
 
 import com.tsoft.librusec.service.library.Book;
 import com.tsoft.librusec.service.library.Library;
-import com.tsoft.librusec.service.library.Section;
+import com.tsoft.librusec.service.library.group.ByAuthorGroup;
 import com.tsoft.librusec.service.library.LibraryService;
 import org.junit.Test;
 
@@ -21,13 +21,13 @@ public class LibraryServiceTest {
         library.getBooks().add(createBook("English"));
         library.getBooks().add(createBook("\u0420\u0443\u0441\u0441\u043a\u0438\u0439"));
 
-        ArrayList<Section> sections = libraryService.getSections(library);
+        ArrayList<ByAuthorGroup> groups = libraryService.groupByAuthor(library);
 
-        assertEquals(2, sections.size());
-        assertEquals(0, sections.get(0).firstBookIndex);
-        assertEquals(2, sections.get(0).count);
-        assertEquals(2, sections.get(1).firstBookIndex);
-        assertEquals(1, sections.get(1).count);
+        assertEquals(2, groups.size());
+        assertEquals(0, groups.get(0).firstBookIndex);
+        assertEquals(2, groups.get(0).count);
+        assertEquals(2, groups.get(1).firstBookIndex);
+        assertEquals(1, groups.get(1).count);
     }
 
     private Book createBook(String authors) {

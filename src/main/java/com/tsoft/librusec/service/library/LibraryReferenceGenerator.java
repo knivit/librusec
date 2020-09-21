@@ -2,8 +2,8 @@ package com.tsoft.librusec.service.library;
 
 import com.tsoft.librusec.service.config.Config;
 import com.tsoft.librusec.service.config.ConfigService;
-import com.tsoft.librusec.service.writer.CsvLibraryWriter;
-import com.tsoft.librusec.service.writer.HtmlLibraryWriter;
+import com.tsoft.librusec.service.writer.csv.CsvLibraryWriter;
+import com.tsoft.librusec.service.writer.html.HtmlLibraryWriter;
 import com.tsoft.librusec.service.writer.LibraryWriter;
 import com.tsoft.librusec.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -50,15 +50,15 @@ public class LibraryReferenceGenerator {
     }
 
     public void generate(Config config) throws Exception {
-        File[] files = findZipFiles(config);
-        if (files == null || files.length == 0) {
+        File[] nonProcessedFiles = findNonProcessedZipFiles(config);
+        if (nonProcessedFiles == null || nonProcessedFiles.length == 0) {
             log.info("Non-processed zip files in {} not found, processing skipped", config.getBooksFolder());
             return;
         }
 
-        libraryService.process(config, files);
+        libraryService.process(config, nonProcessedFiles);
 
-        Library library = libraryService.load(config);
+        Library library = libraryService.getLibrary();
 
         List<LibraryWriter> libraryWriters = Arrays.asList(new CsvLibraryWriter(), new HtmlLibraryWriter());
         for (LibraryWriter libraryWriter : libraryWriters) {
@@ -66,7 +66,7 @@ public class LibraryReferenceGenerator {
         }
     }
 
-    private File[] findZipFiles(Config config) {
+    private File[] findNonProcessedZipFiles(Config config) {
         File root = new File(config.getBooksFolder());
         return root.listFiles((dir, name) -> name.endsWith(".zip") &&
             !Files.exists(Path.of(config.getLibraryFolder(), FileUtil.changeExtension(name, ".ser"))));

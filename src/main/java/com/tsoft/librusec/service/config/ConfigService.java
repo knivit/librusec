@@ -1,8 +1,7 @@
 package com.tsoft.librusec.service.config;
 
+import com.tsoft.librusec.service.cache.CacheFactory;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import java.io.Reader;
 import java.io.Writer;
@@ -14,10 +13,8 @@ import static com.tsoft.librusec.util.FileUtil.workingFolder;
 
 public class ConfigService {
 
-    private static final CacheManager cacheManager = new ConcurrentMapCacheManager();
-    private static final Cache cache = cacheManager.getCache("default");
-
     public Config getConfig() {
+        Cache cache = CacheFactory.getConfigCache();
         return cache.get("config", () -> loadConfig());
     }
 
@@ -42,6 +39,7 @@ public class ConfigService {
 
         try (Writer writer = Files.newBufferedWriter(getConfigFolder())) {
             props.store(writer, "LibRusEc configuration file");
+            Cache cache = CacheFactory.getConfigCache();
             cache.clear();
         } catch (Exception ex) {
             throw new IllegalStateException(ex);

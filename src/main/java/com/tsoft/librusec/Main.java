@@ -14,7 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class Main {
 
     /**
-     * I've tried do not use Spring Context here, so there are no any Beans (except @RestController).
+     * I've tried to do not use Spring Context here, so there are not any Beans (except @RestController).
      * Cons:
      *   - fast application start up
      * Pros:

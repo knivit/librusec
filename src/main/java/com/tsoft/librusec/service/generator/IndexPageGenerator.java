@@ -58,5 +58,4 @@ class IndexPageGenerator {
             writer.write("<br>\n");
         }
     }
-
 }

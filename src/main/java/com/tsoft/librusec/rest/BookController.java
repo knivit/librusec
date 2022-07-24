@@ -27,15 +27,10 @@ public class BookController {
 
     @GetMapping("/")
     public void indexPage(HttpServletResponse response) throws IOException {
-        GenerationResult result = htmlContentGenerator.generateIndexPage(response.getWriter());
         response.addHeader("Content-Type", "text/html; charset=utf-8");
+        GenerationResult result = htmlContentGenerator.generateIndexPage(response.getWriter());
         response.setStatus(result == GenerationResult.SUCCESS ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
-
-/*    @GetMapping("/static/{fileName}")
-    public ResponseEntity<Resource> staticFile(@PathVariable("fileName") String fileName) {
-
-    } */
 
     @GetMapping("/book/{zipFileName}/{bookFileName:.+}")
     public ResponseEntity<Resource> download(@PathVariable("zipFileName") String zipFileName, @PathVariable("bookFileName") String bookFileName) {

@@ -1,13 +1,12 @@
 package com.tsoft.librusec.service.parser;
 
 import com.tsoft.librusec.service.library.Book;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class Fb2ParserTest {
 
@@ -20,8 +19,8 @@ public class Fb2ParserTest {
         assertNotNull(books);
         assertEquals(1, books.size());
         assertEquals("Аббасзаде Гусейн", books.get(0).authors);
-        assertEquals(null, books.get(0).date);
-        assertEquals(null, books.get(0).annotation);
+        assertNull(books.get(0).date);
+        assertNull(books.get(0).annotation);
         assertEquals("ru", books.get(0).lang);
         assertEquals("prose_rus_classic", books.get(0).genre);
         assertEquals("Цветы полевые", books.get(0).title);

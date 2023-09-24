@@ -4,11 +4,11 @@ import com.tsoft.librusec.service.library.Book;
 import com.tsoft.librusec.service.library.Library;
 import com.tsoft.librusec.service.library.group.ByAuthorGroup;
 import com.tsoft.librusec.service.library.LibraryService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LibraryServiceTest {
 

@@ -49,7 +49,7 @@ public class Main {
 
             if (config != null) {
                 registry
-                    .addResourceHandler("/*.{html,css,ico,js}")
+                    .addResourceHandler("/*.html", "/*.css", "/*.ico", "/*.js")
                     .addResourceLocations("file:" + config.getHtmlFolder() + "/");
             }
         }

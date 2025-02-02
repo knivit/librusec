@@ -15,6 +15,8 @@ import java.util.List;
 
 @Slf4j
 public class LibraryService {
+    private static final int CHUNK_SIZE = 10_000;
+
     private final ConfigService configService = new ConfigService();
 
     public void process(Config config, File[] files) {
@@ -22,6 +24,7 @@ public class LibraryService {
 
         int totalCount = 0;
         long totalTime = 0;
+        List<Book> books = new ArrayList<>();
         for (int i = 0; i < files.length; i ++) {
             String fileName = files[i].getName();
             System.out.print("File " + (i + 1) + " of " + files.length + " " + fileName + ": ");
@@ -29,16 +32,24 @@ public class LibraryService {
             long millis = System.currentTimeMillis();
 
             Fb2Parser parser = new Fb2Parser();
-            List<Book> books = parser.parse(files[i]);
+            books = parser.parse(files[i]);
 
-            Library library = new Library(books);
-            serializeToFile(library, config.getLibraryFolder() + "/" + FileUtil.changeExtension(fileName, ".ser"));
+            if (books.size() >= CHUNK_SIZE) {
+                Library library = new Library(books);
+                serializeToFile(library, config.getSystemFolder() + "/" + FileUtil.changeExtension(fileName, ".ser"));
+                books.clear();
+            }
 
             long time = (System.currentTimeMillis() - millis) / 1000;
             System.out.println(" read in " + time + " sec, " + books.size() + " book(s) found");
 
             totalCount += books.size();
             totalTime += time;
+        }
+
+        if (!books.isEmpty()) {
+            Library library = new Library(books);
+            serializeToFile(library, config.getSystemFolder() + "/" + FileUtil.changeExtension("todo", ".ser"));
         }
 
         log.info("{} file(s) processed in {} sec", totalCount, totalTime);
@@ -87,7 +98,7 @@ public class LibraryService {
 
         int n = 0;
         for (Book book : library.getBooks()) {
-            String year = (book.date == null) ? "<unknown>" : book.date;
+            String year = isYear(book.year) ? book.year : "unknown";
 
             if (!group.year.equals(year)) {
                 group = new ByYearGroup();
@@ -102,27 +113,32 @@ public class LibraryService {
         return groups;
     }
 
+    private boolean isYear(String text) {
+        return (text != null && (text.length() == 4) && Character.isDigit(text.charAt(0)));
+    }
+
     public Library getLibrary() {
         return CacheFactory.getLibraryCache().get("library", () -> load());
     }
 
     private Library load() {
         Config config = configService.getConfig();
-        log.info("Loading library {}", config.getLibraryFolder());
+        log.info("Loading library {}", config.getSystemFolder());
 
-        File root = new File(config.getLibraryFolder());
+        File root = new File(config.getSystemFolder());
         File[] files = root.listFiles((dir, name) -> name.endsWith(".ser"));
         if (files == null || files.length == 0) {
             return new Library();
         }
 
-        Library result = new Library();
+        Library library = new Library();
         for (File file : files) {
-            Library library = deserializeFromFile(file.getAbsolutePath());
-            unionAll(result, library);
+            Library fromFile = deserializeFromFile(file.getAbsolutePath());
+            unionAll(library, fromFile);
         }
 
-        return result;
+        log.info("Library loaded, {} records", library.getBooks().size());
+        return library;
     }
 
     private void serializeToFile(Library library, String fileName) {
@@ -153,8 +169,8 @@ public class LibraryService {
 
     private void sortByYear(Library library) {
         library.getBooks().sort((b1, b2) ->
-            (b1.date == null) ?
-                ((b2.date == null) ? 0 : -1) :
-                    (b2.date == null) ? 1 : b1.date.compareToIgnoreCase(b2.date));
+            (b1.year == null) ?
+                ((b2.year == null) ? 0 : -1) :
+                    (b2.year == null) ? 1 : b1.year.compareToIgnoreCase(b2.year));
     }
 }

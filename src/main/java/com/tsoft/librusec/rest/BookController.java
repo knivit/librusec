@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -25,9 +26,22 @@ public class BookController {
     private final HtmlContentGenerator htmlContentGenerator = new HtmlContentGenerator();
     private final DownloadService downloadService = new DownloadService();
 
-    @GetMapping("/")
-    public void indexPage(HttpServletResponse response) throws IOException {
-        response.addHeader("Content-Type", "text/html; charset=utf-8");
+    /**
+     *   -------------------------------------------------------------------------------------------
+     *   I Language I Genre    I Year                        I Title            I Annotation       I
+     *   -------------------------------------------------------------------------------------------
+     *   I - <val1> I - <val1> I between [input] and [input] I contains [input] I contains [input] I
+     *   I - <val2> I - <val2> I                             I                  I                  I
+     *   I - ...    I - ...    I                             I                  I                  I
+     *   -------------------------------------------------------------------------------------------
+     *   I Authors: A B ...                                                     I      [Find]      I
+     *   -------------------------------------------------------------------------------------------
+     *   <Author1>
+     *   <Author2>
+     *   ...
+     */
+    @PostMapping(value = "/search", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE, produces = MediaType.TEXT_HTML_VALUE)
+    public void search(HttpServletResponse response) throws IOException {
         GenerationResult result = htmlContentGenerator.generateIndexPage(response.getWriter());
         response.setStatus(result == GenerationResult.SUCCESS ? HttpServletResponse.SC_OK : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }

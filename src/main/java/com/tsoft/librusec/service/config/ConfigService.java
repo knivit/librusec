@@ -38,9 +38,7 @@ public class ConfigService {
         props.put("version", Config.VERSION);
         props.put("booksFolder", config.getBooksFolder());
         props.put("cacheFolder", config.getCacheFolder());
-        props.put("libraryFolder", config.getLibraryFolder());
-        props.put("htmlFolder", config.getHtmlFolder());
-        props.put("csvFolder", config.getCsvFolder());
+        props.put("systemFolder", config.getSystemFolder());
 
         try (Writer writer = Files.newBufferedWriter(getConfigFolder())) {
             props.store(writer, "LibRusEc configuration file");

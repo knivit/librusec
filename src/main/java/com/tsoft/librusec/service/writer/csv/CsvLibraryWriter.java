@@ -3,26 +3,24 @@ package com.tsoft.librusec.service.writer.csv;
 import com.tsoft.librusec.service.library.Book;
 import com.tsoft.librusec.service.config.Config;
 import com.tsoft.librusec.service.library.Library;
-import com.tsoft.librusec.service.writer.LibraryWriter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
-public class CsvLibraryWriter implements LibraryWriter {
+public class CsvLibraryWriter {
 
-    @Override
-    public void process(Config config, Library library) throws Exception {
-        log.info("Generating CSV index {}", config.getCsvFolder());
+    public static void process(Config config, Library library) throws Exception {
+        log.info("Generating CSV index {}", config.getSystemFolder());
 
-        try (BufferedWriter writer = prepareWriter(config.getCsvFolder())) {
+        try (BufferedWriter writer = prepareWriter(config.getSystemFolder())) {
             for (Book book : library.getBooks()) {
                 writer.write(toCsv(book.lang));
                 writer.write(',');
                 writer.write(toCsv(book.genre));
                 writer.write(',');
-                writer.write(toCsv(book.date));
+                writer.write(toCsv(book.year));
                 writer.write(',');
                 writer.write(toCsv(book.title));
                 writer.write(',');
@@ -36,7 +34,7 @@ public class CsvLibraryWriter implements LibraryWriter {
         }
     }
 
-    private BufferedWriter prepareWriter(String outputFolder) throws IOException {
+    private static BufferedWriter prepareWriter(String outputFolder) throws IOException {
         String outputFileName = outputFolder + "/index.csv";
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8));
 
@@ -46,7 +44,7 @@ public class CsvLibraryWriter implements LibraryWriter {
         return writer;
     }
 
-    private String toCsv(String value) {
+    private static String toCsv(String value) {
         if (value == null) return "";
 
         // replace " with ""

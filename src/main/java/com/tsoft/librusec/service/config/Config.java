@@ -17,17 +17,13 @@ public class Config {
 
     private String booksFolder;
     private String cacheFolder;
-    private String libraryFolder;
-    private String htmlFolder;
-    private String csvFolder;
+    private String systemFolder;
 
     public static Config from(Properties props) {
         return Config.builder()
             .booksFolder(props.getProperty("booksFolder"))
             .cacheFolder(props.getProperty("cacheFolder"))
-            .libraryFolder(props.getProperty("libraryFolder"))
-            .htmlFolder(props.getProperty("htmlFolder"))
-            .csvFolder(props.getProperty("csvFolder"))
+            .systemFolder(props.getProperty("systemFolder"))
             .build();
     }
 }

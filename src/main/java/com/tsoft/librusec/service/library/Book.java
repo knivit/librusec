@@ -1,12 +1,6 @@
 package com.tsoft.librusec.service.library;
 
-import java.io.Serial;
-import java.io.Serializable;
-
-public class Book implements Serializable {
-
-    @Serial
-    public static final long serialVersionUID = 2L;
+public class Book {
 
     public String zipFileName;
     public String fileName;
@@ -15,5 +9,5 @@ public class Book implements Serializable {
     public String title;
     public String lang;
     public String annotation;
-    public String date;
+    public String year;
 }

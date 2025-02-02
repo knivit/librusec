@@ -4,31 +4,23 @@ import com.tsoft.librusec.service.library.Book;
 import com.tsoft.librusec.service.config.Config;
 import com.tsoft.librusec.service.library.Library;
 import com.tsoft.librusec.service.library.group.ByAuthorGroup;
-import com.tsoft.librusec.service.writer.LibraryWriter;
 import com.tsoft.librusec.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 
 @Slf4j
-public class HtmlLibraryWriter implements LibraryWriter {
+public class HtmlLibraryWriter {
 
     private static final int PAGE_SIZE = 500;
 
-    private final IndexPageWriter indexPageWriter = new IndexPageWriter();
+    private static final IndexPageWriter indexPageWriter = new IndexPageWriter();
 
-    @Override
-    public void process(Config config, Library library) throws Exception {
-        log.info("Generating HTML index {}", config.getHtmlFolder());
+    public static void process(Config config, Library library) throws Exception {
+        log.info("Generating HTML index {}", config.getSystemFolder());
 
-        prepare(config.getHtmlFolder());
-
-        indexPageWriter.write(config.getHtmlFolder(), library);
+        indexPageWriter.write(config.getSystemFolder(), library);
 
        /* for (ByAuthorGroup group : byAuthorGroups) {
             for (int page = 0; page * PAGE_SIZE < group.count; page ++) {
@@ -37,15 +29,7 @@ public class HtmlLibraryWriter implements LibraryWriter {
         }*/
     }
 
-    private void prepare(String outputFolder) throws Exception {
-        for (String fileName : new String[] {"/code.js", "/default.css", "/favicon.ico"}) {
-            Path src = Paths.get(getClass().getResource(fileName).toURI());
-            Path dst = Paths.get(outputFolder, fileName);
-            Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-        }
-    }
-
-    private void writePage(String outputFolder, Library library, ByAuthorGroup group, int page) throws IOException {
+    private static void writePage(String outputFolder, Library library, ByAuthorGroup group, int page) throws IOException {
         String outputFileName = outputFolder + "/a_" + Integer.toHexString(group.letter) + "_" + page + ".html";
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {
@@ -86,11 +70,11 @@ public class HtmlLibraryWriter implements LibraryWriter {
         }
     }
 
-    private void writeTitle(Writer writer, String name) throws IOException {
+    private static void writeTitle(Writer writer, String name) throws IOException {
         writer.write("\n<h3>" + name + "</h3>\n");
     }
 
-    private void writeHtmlHeader(Writer writer, String name) throws IOException {
+    private static void writeHtmlHeader(Writer writer, String name) throws IOException {
         writer.write(
             "<!DOCTYPE html>\n" +
             "<html>\n" +
@@ -98,28 +82,28 @@ public class HtmlLibraryWriter implements LibraryWriter {
             "<meta charset=\"utf-8\">" +
             "<title>LibRuSec " + name + "</title>\n" +
             "<link rel='stylesheet' href='default.css'>\n" +
-            "<script type='text/javascript' src='code.js'></script>\n" +
+            "<script type='text/javascript' src='js/Book.js'></script>\n" +
             "</head>\n" +
             "<body>");
     }
 
-    private void writeHtmlFooter(BufferedWriter writer) throws IOException {
+    private static void writeHtmlFooter(BufferedWriter writer) throws IOException {
         writer.write("</body>\n");
         writer.write("</html>\n");
     }
 
-    private void writeBook(Writer writer, Book book, String author) throws IOException {
+    private static void writeBook(Writer writer, Book book, String author) throws IOException {
         writer.write(
             "<tr>" +
                 "<td>" + author + "</td>" +
                 "<td><a href='#' onclick=\"dwl(this,'" + FileUtil.deleteExtension(book.zipFileName) + "','" + book.fileName + "')\">" + (book.title == null ? "" : book.title) + "</a></td>" +
                 "<td>" + (book.genre == null ? "" : book.genre) + "</td>" +
-                "<td>" + (book.date == null ? "" : book.date) + "</td>" +
+                "<td>" + (book.year == null ? "" : book.year) + "</td>" +
                 "<td>" + (book.annotation == null ? "" : book.annotation) + "</td>" +
             "</tr>\n");
     }
 
-    private void writeNavigationBar(Writer writer, String firstPage, String prevPage, int page, String nextPage, String lastPage) throws IOException {
+    private static void writeNavigationBar(Writer writer, String firstPage, String prevPage, int page, String nextPage, String lastPage) throws IOException {
         writer.write(
             "<table>\n" +
                 "<tr>" +
@@ -133,7 +117,7 @@ public class HtmlLibraryWriter implements LibraryWriter {
             "</table>\n");
     }
 
-    private void writeTableHeader(Writer writer) throws IOException {
+    private static void writeTableHeader(Writer writer) throws IOException {
         writer.write(
             "<table style='width:100%'>\n" +
                 "<tr>" +
@@ -145,7 +129,7 @@ public class HtmlLibraryWriter implements LibraryWriter {
                 "</tr>\n");
     }
 
-    private void writeTableFooter(BufferedWriter writer) throws IOException {
+    private static void writeTableFooter(BufferedWriter writer) throws IOException {
         writer.write("</table>\n");
     }
 }

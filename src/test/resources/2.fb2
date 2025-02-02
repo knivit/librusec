@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:l="http://www.w3.org/1999/xlink">
+<description>
+  <title-info>
+    <genre>detective</genre>
+    <genre>thriller</genre>
+    <author>
+      <first-name>Мари Аделаид</first-name>
+      <last-name>Беллок Лаундз</last-name>
+    </author>
+    <book-title>Жилец</book-title>
+    <annotation>
+      <p>Миссис Бантинг вместе с мужем открывает доходный дом, и поначалу дела идут из рук вон плохо. Но через какое-то время у Бантингов появляется новый арендатор: мистер Слут, вежливый и воспитанный молодой человек, готовый щедро платить за комнаты. Правда, у него есть свои странности: он до фанатизма религиозен, постоянно куда-то исчезает по ночам, а потом проводит некие таинственные эксперименты.</p>
+      <p>Меж тем по всему Лондону разносятся слухи о серийном убийце. Жестокий маньяк убивает молодых женщин и оставляет на телах жертв крошечные клочки бумаги с надписью «Мститель». Полицейские патрулируют улицы днем и ночью, но никак не могут выйти на его след.</p>
+      <p>Постепенно миссис Бантинг начинает подозревать, что их жилец может быть не тем, за кого себя выдает…</p>
+    </annotation>
+    <keywords>экранизации,психологические детективы,английские детективы,жестокие убийства,расследование убийств,маньяки,саспенс</keywords>
+    <date value="1911-01-01">1911</date>
+    <coverpage>
+      <image l:href="#cover.jpg"/>
+    </coverpage>
+    <lang>ru</lang>
+    <src-lang>en</src-lang>
+    <translator>
+      <first-name>Людмила</first-name>
+      <middle-name>Юрьевна</middle-name>
+      <last-name>Брилова</last-name>
+    </translator>
+  </title-info>
+  <document-info>
+    <author>
+      <first-name>Jinn</first-name>
+      <last-name/>
+    </author>
+    <program-used> Presto, FictionBook Editor Release 2.6.6</program-used>
+    <date value="2024-02-29">29.02.2024</date>
+    <src-url>http://www. /pages/biblio_book/?art=70400527</src-url>
+    <id>1b0ea4be-d619-11ee-8496-0cc47af30fe4</id>
+    <version>1</version>
+    <history>
+      <p>v1.0 – создание FB2 – Jinn</p>
+    </history>
+  </document-info>
+  <publish-info>
+    <book-name>Жилец</book-name>
+    <publisher>Издательство АСТ</publisher>
+    <city>Москва</city>
+    <year>2023</year>
+    <isbn>978-5-17-160211-6</isbn>
+    <sequence name="Вселенная Стивена Кинга"/>
+  </publish-info>
+</description>
+<body>
+  <title>
+   <p>Мари Беллок Лаундз</p>
+   <p>Жилец</p>
+  </title>
+  <section>
+   <p>© Перевод. Л. Брилова, 2023</p>
+   <p>© ООО «Издательство АСТ», 2024</p>
+   <subtitle>* * *</subtitle>
+  </section>
+  <section>
+   <epigraph>
+    <p>Ты удалил от меня друга и искреннего; знакомых моих не видно.</p>
+    <text-author>Псалтирь, 87:19</text-author>
+   </epigraph>
+   <empty-line/>
+  </section>
+  <section>
+   <title>
+    <p>Глава I</p>
+   </title>
+  </section>
+ </body>
+</FictionBook>

@@ -1,7 +1,6 @@
 package com.tsoft.librusec;
 
 import com.tsoft.librusec.service.config.Config;
-import com.tsoft.librusec.service.config.ConfigService;
 import com.tsoft.librusec.service.library.LibraryReferenceGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -36,22 +35,15 @@ public class Main {
         SpringApplication.run(Main.class, args);
     }
 
-    /** Serve the generated HTML-files as static content (located outside the application) */
     @Configuration
     @EnableWebMvc
     public static class GeneratedHtmlConfig implements WebMvcConfigurer {
 
-        private final ConfigService configService = new ConfigService();
-
         @Override
         public void addResourceHandlers(ResourceHandlerRegistry registry) {
-            Config config = configService.getConfig();
-
-            if (config != null) {
-                registry
-                    .addResourceHandler("/*.html", "/*.css", "/*.ico", "/*.js")
-                    .addResourceLocations("file:" + config.getHtmlFolder() + "/");
-            }
+            registry
+                .addResourceHandler("/*.html", "/*.css", "/*.ico", "/*.js")
+                .addResourceLocations("/", "/js");
         }
     }
 }

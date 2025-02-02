@@ -1,10 +1,16 @@
 package com.tsoft.librusec.service.parser;
 
 import com.tsoft.librusec.service.library.Book;
+import com.tsoft.librusec.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.EndElement;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,68 +20,41 @@ import java.util.zip.ZipInputStream;
 @Slf4j
 public class Fb2Parser {
 
-    public List<Book> parse(File zipFile) {
+    public List<Book> parse(File file) {
         List<Book> books = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
-        // file names in the zip are UTF-8
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile), StandardCharsets.UTF_8)) {
-            ZipEntry entry;
+        try {
+            if (file.getName().endsWith(".zip")) {
+                // file names in the zip are UTF-8
+                try (ZipInputStream zis = new ZipInputStream(new FileInputStream(file), StandardCharsets.UTF_8)) {
+                    ZipEntry entry;
 
-            int progressBar = 0;
-            while ((entry = zis.getNextEntry()) != null) {
-                if (!entry.getName().endsWith(".fb2")) {
-                    errors.add("Unsupported extension of " + entry.getName() + ": book skipped");
-                    continue;
+                    while ((entry = zis.getNextEntry()) != null) {
+                        if (!entry.getName().endsWith(".fb2")) {
+                            errors.add("Unsupported file extension, skipped: " + entry.getName());
+                            continue;
+                        }
+
+                        Book book = readBook(file.getName() + "#" + entry.getName(), zis);
+                        if (book != null) {
+                            book.zipFileName = file.getName();
+                            book.fileName = entry.getName();
+                            books.add(book);
+                        }
+                    }
                 }
-
-                byte[] buf = new byte[2048];
-                int bufSize = zis.read(buf);
-
-                String defaultCharsetName = "windows-1251";
-                String text = new String(buf, 0, bufSize, Charset.forName(defaultCharsetName));
-
-                // read the charset
-                String charsetName = getValue(text, " encoding=\"", "\"");
-                if (charsetName == null) {
-                    charsetName = defaultCharsetName;
-                    errors.add("Unknown encoding for " + entry.getName() + ": using " + defaultCharsetName);
+            } else {
+                try (InputStream is = new FileInputStream(file)) {
+                    Book book = readBook(file.getName(), is);
+                    if (book != null) {
+                        book.fileName = file.getName();
+                        books.add(book);
+                    }
                 }
-
-                if (!defaultCharsetName.equalsIgnoreCase(charsetName)) {
-                    text = new String(buf, 0, bufSize, Charset.forName(charsetName));
-                }
-
-                String title = getValue(text, "<title-info>", "</title-info>");
-
-                // try to read further (buf size = 2048 doesn't mean all 2048 bytes will be read at once)
-                while (title == null) {
-                    bufSize = zis.read(buf);
-                    if (bufSize == -1) break;
-
-                    text = text + new String(buf, 0, bufSize, Charset.forName(charsetName));
-                    title = getValue(text, "<title-info>", "</title-info>");
-                }
-                if (title == null) {
-                    errors.add("Undefined <title-info> for " + entry.getName() + ": book skipped");
-                    continue;
-                }
-
-                Book book = new Book();
-                book.zipFileName = zipFile.getName();
-                book.fileName = entry.getName();
-                book.genre = getValue(title, "<genre>", "</genre>");
-                book.title = getValue(title, "<book-title>", "</book-title>");
-                book.lang = getValue(title, "<lang>", "</lang>");
-                book.authors = getAuthors(title);
-                book.annotation = getValue(title, "<annotation>", "</annotation");
-                book.date = getValue(title, "<date>", "</date>");
-                books.add(book);
-
-                if ((progressBar ++ % 1000) == 0) System.out.print('.');
             }
         } catch (Exception ex) {
-            log.error("Error processing file {}", zipFile.getAbsolutePath(), ex);
+            log.error("Error processing file {}", file.getAbsolutePath(), ex);
             throw new IllegalStateException(ex);
         }
 
@@ -86,54 +65,103 @@ public class Fb2Parser {
         return books;
     }
 
-    private String getAuthors(String title) {
-        ArrayList<String> authors = getValueList(title, "<author>", "</author>");
-        StringBuilder buf = new StringBuilder();
-        for (String author : authors) {
-            String firstName = getValue(author, "<first-name>", "</first-name>");
-            String middleName = getValue(author, "<middle-name>", "</middle-name>");
-            String lastName = getValue(author, "<last-name>", "</last-name>");
+    private Book readBook(String fileName, InputStream is) {
+        try {
+            XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+            XMLEventReader reader = xmlInputFactory.createXMLEventReader(is);
 
-            if (buf.length() > 0) buf.append(',');
-            if (lastName != null && !lastName.isEmpty()) buf.append(lastName);
-            if (middleName != null && !middleName.isEmpty()) buf.append(' ').append(middleName);
-            if (firstName != null && !firstName.isEmpty()) buf.append(' ').append(firstName);
-        }
-        return buf.length() == 0 ? "?" : buf.toString();
-    }
+            Fb2Book fb2Book = null;
+            Fb2Author fb2Author = null;
+            Fb2Annotation fb2Annotation = null;
 
-    private String getValue(String text, String startTag, String endTag) {
-        ArrayList<String> values = getValueList(text, startTag, endTag);
-        if (values.isEmpty()) return null;
+            boolean done = false;
+            while (!done && reader.hasNext()) {
+                XMLEvent nextEvent = reader.nextEvent();
+                if (nextEvent.isStartElement()) {
+                    StartElement startElement = nextEvent.asStartElement();
+                    switch (startElement.getName().getLocalPart()) {
+                        case "title-info":
+                            fb2Book = new Fb2Book();
+                            break;
+                        case "genre":
+                            fb2Book.addGenre(readValue(reader));
+                            break;
+                        case "author":
+                            fb2Author = new Fb2Author();
+                            break;
+                        case "first-name":
+                            fb2Author.firstName = readValue(reader);
+                            break;
+                        case "middle-name":
+                            fb2Author.middleName = readValue(reader);
+                            break;
+                        case "last-name":
+                            fb2Author.lastName = readValue(reader);
+                            break;
+                        case "book-title":
+                            fb2Book.title = readValue(reader);
+                            break;
+                        case "annotation":
+                            fb2Annotation = new Fb2Annotation();
+                            fb2Annotation.add(readValue(reader));
+                            break;
+                        case "p":
+                            fb2Annotation.add(readValue(reader));
+                            break;
+                        case "keywords":
+                            fb2Book.keywords = readValue(reader);
+                            break;
+                        case "date":
+                            fb2Book.year = readValue(reader);
+                            break;
+                        case "lang":
+                            fb2Book.lang = readValue(reader);
+                            break;
+                        case "src-lang":
+                            fb2Book.srcLang = readValue(reader);
+                            break;
+                    }
+                }
 
-        String val = values.get(0);
-        if (values.size() > 1) {
-            StringBuilder buf = new StringBuilder();
-            for (String str : values) {
-                if (buf.length() > 0) buf.append(", ");
-                buf.append(str);
+                if (!nextEvent.isEndElement()) {
+                    continue;
+                }
+
+                EndElement endElement = nextEvent.asEndElement();
+                switch (endElement.getName().getLocalPart()) {
+                    case "title-info":
+                        done = true;
+                        break;
+                    case "author":
+                        fb2Book.addAuthor(fb2Author);
+                        break;
+                    case "annotation":
+                        fb2Book.annotation = fb2Annotation.value;
+                        break;
+                }
             }
-            val = buf.toString();
-        }
 
-        return val;
+            if (fb2Book == null) {
+                return null;
+            }
+
+            Book book = new Book();
+            book.title = fb2Book.title;
+            book.authors = fb2Book.authors;
+            book.genre = fb2Book.genre;
+            book.year = fb2Book.year;
+            book.lang = fb2Book.lang;
+            book.annotation = fb2Book.annotation;
+
+            return book;
+        } catch (Exception ex) {
+            log.warn("Error parsing file {}", fileName, ex);
+            return null;
+        }
     }
 
-    private ArrayList<String> getValueList(String text, String startTag, String endTag) {
-        ArrayList<String> result = new ArrayList<>();
-
-        int off = 0;
-        while (true) {
-            int from = text.indexOf(startTag, off);
-            if (from == -1) break;
-
-            int to = text.indexOf(endTag, from + startTag.length());
-            if (to == -1) break;
-
-            result.add(text.substring(from + startTag.length(), to).trim());
-            off = to;
-        }
-
-        return result;
+    private String readValue(XMLEventReader reader) throws XMLStreamException {
+        XMLEvent nextEvent = reader.nextEvent();
+        return StringUtils.trim(nextEvent.asCharacters().getData());
     }
 }
